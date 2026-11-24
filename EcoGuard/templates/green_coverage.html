@@ -1,0 +1,779 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoGuard | Green Coverage Analysis</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f8f6;
+            color: #17251c;
+        }
+
+        .topbar {
+            background: #123b27;
+            color: white;
+            padding: 17px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .topbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            margin-left: 18px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1250px;
+            margin: 35px auto;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, #164b30, #27804c);
+            color: white;
+            padding: 35px;
+            border-radius: 18px;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            line-height: 1.7;
+            color: #e2f5e8;
+            max-width: 750px;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 15px;
+            padding: 24px;
+            box-shadow: 0 5px 25px rgba(0,0,0,.05);
+            margin-bottom: 25px;
+        }
+
+        .search-box label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-row input {
+            flex: 1;
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid #d5e1d9;
+            border-radius: 9px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-row input:focus {
+            border-color: #27804c;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            border-radius: 9px;
+            padding: 13px 22px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .search-btn {
+            background: #18733c;
+            color: white;
+        }
+
+        .pdf-btn {
+            background: #123b27;
+            color: white;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 25px rgba(0,0,0,.04);
+        }
+
+        .section h2 {
+            font-size: 19px;
+            margin-bottom: 8px;
+        }
+
+        .section-description {
+            color: #718078;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .metric {
+            background: white;
+            padding: 22px;
+            border-radius: 13px;
+            border: 1px solid #e6eee8;
+        }
+
+        .metric small {
+            color: #718078;
+            font-size: 12px;
+        }
+
+        .metric h2 {
+            font-size: 25px;
+            color: #176438;
+            margin-top: 12px;
+        }
+
+        .metric p {
+            font-size: 11px;
+            color: #829087;
+            margin-top: 7px;
+            line-height: 1.5;
+        }
+
+        .target-track {
+            height: 13px;
+            background: #e6eee8;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .target-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #269653, #83c95c);
+            border-radius: 20px;
+        }
+
+        .target-info {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: #64746a;
+            font-size: 12px;
+        }
+
+        #coverageMap {
+            height: 470px;
+            width: 100%;
+            border-radius: 12px;
+            z-index: 1;
+        }
+
+        .map-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .map-controls button {
+            background: #edf5ef;
+            color: #245638;
+            border: 1px solid #d7e7dc;
+        }
+
+        .map-controls button.active {
+            background: #176438;
+            color: white;
+        }
+
+        .map-note {
+            font-size: 11px;
+            color: #718078;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 13px;
+            border-bottom: 1px solid #e9efeb;
+        }
+
+        .data-table th {
+            background: #edf6ef;
+            color: #245638;
+        }
+
+        .report-text {
+            color: #53645a;
+            font-size: 13px;
+            line-height: 1.9;
+        }
+
+        .report-text strong {
+            color: #1b5734;
+        }
+
+        .alert {
+            padding: 13px 16px;
+            border-radius: 9px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            background: #fff1f0;
+            color: #a52a24;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 55px 20px;
+            color: #718078;
+        }
+
+        .empty-state .emoji {
+            font-size: 45px;
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #849188;
+            padding: 25px;
+            font-size: 11px;
+        }
+
+        @media(max-width: 850px) {
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width: 550px) {
+            .container {
+                width: 94%;
+                margin-top: 20px;
+            }
+
+            .hero {
+                padding: 25px;
+            }
+
+            .hero h1 {
+                font-size: 23px;
+            }
+
+            .search-row {
+                flex-direction: column;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .metric {
+                padding: 15px;
+            }
+
+            .metric h2 {
+                font-size: 20px;
+            }
+
+            #coverageMap {
+                height: 350px;
+            }
+
+            .section {
+                padding: 17px;
+            }
+
+            .topbar {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="brand">🌿 EcoGuard</div>
+
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('satellite_monitoring') }}">Satellite Monitoring</a>
+    </nav>
+</header>
+
+<main class="container">
+
+    <section class="hero">
+        <h1>Green Coverage Analysis</h1>
+        <p>
+            Explore vegetation coverage, satellite-derived NDVI,
+            land-cover categories and the difference between the
+            analyzed area's green coverage and the EcoGuard project target.
+        </p>
+    </section>
+
+    <section class="search-box">
+        <form method="POST" action="{{ url_for('green_coverage') }}">
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <label for="location">Search a location</label>
+
+            <div class="search-row">
+                <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    placeholder="Example: Sundarbans, Bangladesh"
+                    required
+                >
+
+                <button class="search-btn" type="submit">
+                    Analyze Location
+                </button>
+            </div>
+        </form>
+    </section>
+
+    {% if analysis %}
+
+        <section class="section">
+            <h2>📍 Analysis Location</h2>
+            <p class="section-description">
+                Results for <strong>{{ location }}</strong>
+            </p>
+
+            <div class="metrics">
+
+                <div class="metric">
+                    <small>Green Coverage</small>
+                    <h2>
+                        {{ "%.2f"|format(analysis.get("green_coverage_percent", 0) or 0) }}%
+                    </h2>
+                    <p>Land-cover-based green coverage</p>
+                </div>
+
+                <div class="metric">
+                    <small>NDVI Vegetation Coverage</small>
+                    <h2>
+                        {{ "%.2f"|format(analysis.get("ndvi_vegetation_coverage_percent", 0) or 0) }}%
+                    </h2>
+                    <p>Area with NDVI above the configured threshold</p>
+                </div>
+
+                <div class="metric">
+                    <small>Average NDVI</small>
+                    <h2>
+                        {{ "%.3f"|format(analysis.get("average_ndvi", 0) or 0) }}
+                    </h2>
+                    <p>Average vegetation index</p>
+                </div>
+
+                <div class="metric">
+                    <small>Total Area</small>
+                    <h2>
+                        {{ "%.2f"|format(analysis.get("total_area_hectares", 0) or 0) }}
+                    </h2>
+                    <p>Hectares analyzed</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🎯 Green Coverage Target</h2>
+
+            <p class="section-description">
+                EcoGuard's configurable project benchmark:
+                {{ green_target }}%.
+                This is a project benchmark, not a universal ecological standard.
+            </p>
+
+            {% set coverage = analysis.get("green_coverage_percent", 0) or 0 %}
+            {% set target = green_target or 60 %}
+            {% set progress = (coverage / target * 100) if target else 0 %}
+            {% set progress = [progress, 100]|min %}
+
+            <div class="target-track">
+                <div
+                    class="target-fill"
+                    style="width: {{ progress }}%;"
+                ></div>
+            </div>
+
+            <div class="target-info">
+                <span>Current: {{ "%.2f"|format(coverage) }}%</span>
+                <span>Target: {{ target }}%</span>
+            </div>
+
+            <p class="report-text" style="margin-top:15px;">
+                {% if coverage >= target %}
+                    <strong>Target achieved.</strong>
+                    The measured green coverage is at or above the project benchmark.
+                {% else %}
+                    <strong>Target gap:</strong>
+                    {{ "%.2f"|format(target - coverage) }} percentage points
+                    below the project benchmark.
+                {% endif %}
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>🛰️ Satellite & Vegetation Maps</h2>
+
+            <p class="section-description">
+                Switch between satellite imagery, NDVI visualization
+                and land-cover classification.
+            </p>
+
+            <div class="map-controls">
+                <button type="button" class="active" id="satelliteBtn">
+                    Satellite
+                </button>
+
+                <button type="button" id="ndviBtn">
+                    NDVI Overlay
+                </button>
+
+                <button type="button" id="landcoverBtn">
+                    Land-cover Overlay
+                </button>
+            </div>
+
+            <div id="coverageMap"></div>
+
+            <p class="map-note">
+                Satellite imagery is provided by Esri. NDVI and land-cover
+                overlays are provided by Google Earth Engine. Map availability
+                depends on the returned image tiles.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>🌱 Land-cover Distribution</h2>
+
+            <p class="section-description">
+                Area distribution by land-cover class from the
+                land-cover dataset used by the analysis.
+            </p>
+
+            {% set classes = analysis.get("land_cover_classes", []) %}
+
+            {% if classes %}
+                <div style="overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Land-cover Type</th>
+                                <th>Area (hectares)</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in classes %}
+                                <tr>
+                                    <td>{{ item.get("name", "Unknown") }}</td>
+                                    <td>
+                                        {{ "%.2f"|format(item.get("area_hectares", 0) or 0) }}
+                                    </td>
+                                    <td>
+                                        {{ "%.2f"|format(item.get("percentage", 0) or 0) }}%
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="report-text">
+                    Land-cover category details are not available for this analysis.
+                </p>
+            {% endif %}
+        </section>
+
+        <section class="section">
+            <h2>📊 Change Analysis</h2>
+
+            <p class="section-description">
+                Comparison with the previous analysis period.
+            </p>
+
+            <div class="metrics">
+                <div class="metric">
+                    <small>NDVI Change</small>
+                    <h2>
+                        {{ analysis.get("ndvi_change", "N/A") }}
+                    </h2>
+                    <p>Change in average NDVI</p>
+                </div>
+
+                <div class="metric">
+                    <small>Coverage Change</small>
+                    <h2>
+                        {{ analysis.get("coverage_change_percent", "N/A") }}
+                    </h2>
+                    <p>Change in vegetation coverage</p>
+                </div>
+            </div>
+
+            <p class="report-text">
+                <strong>Current period:</strong>
+                {{ analysis.get("current_start", "N/A") }}
+                to
+                {{ analysis.get("current_end", "N/A") }}
+                <br>
+
+                <strong>Previous period:</strong>
+                {{ analysis.get("previous_start", "N/A") }}
+                to
+                {{ analysis.get("previous_end", "N/A") }}
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>📝 Analysis Summary</h2>
+
+            <div class="report-text">
+                <p>
+                    The analyzed location has a measured green coverage of
+                    <strong>{{ "%.2f"|format(coverage) }}%</strong>.
+                    The EcoGuard project benchmark is
+                    <strong>{{ target }}%</strong>.
+                </p>
+
+                <p>
+                    NDVI-based vegetation coverage is
+                    <strong>
+                        {{ "%.2f"|format(analysis.get("ndvi_vegetation_coverage_percent", 0) or 0) }}%
+                    </strong>.
+                    NDVI measures vegetation greenness and activity;
+                    it is not a direct measurement of tree count.
+                </p>
+
+                <p>
+                    Green land-cover categories may include forests,
+                    shrubland, grassland, cropland and wetlands.
+                    These categories do not all represent areas suitable
+                    for tree planting.
+                </p>
+
+                <p>
+                    Do not treat water bodies, wetlands, built-up areas,
+                    existing natural forests or ecologically sensitive
+                    habitats as automatically available planting land.
+                </p>
+            </div>
+
+            <form
+                method="POST"
+                action="{{ url_for('green_coverage_pdf') }}"
+                style="margin-top:22px;"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <input type="hidden" name="location" value="{{ location }}">
+                <input type="hidden" name="green_coverage" value="{{ analysis.get('green_coverage_percent', 'N/A') }}">
+                <input type="hidden" name="ndvi_coverage" value="{{ analysis.get('ndvi_vegetation_coverage_percent', 'N/A') }}">
+                <input type="hidden" name="average_ndvi" value="{{ analysis.get('average_ndvi', 'N/A') }}">
+                <input type="hidden" name="total_area" value="{{ analysis.get('total_area_hectares', 'N/A') }}">
+                <input type="hidden" name="green_area" value="{{ analysis.get('green_area_hectares', 'N/A') }}">
+                <input type="hidden" name="target" value="{{ green_target }}">
+                <input type="hidden" name="ndvi_change" value="{{ analysis.get('ndvi_change', 'N/A') }}">
+                <input type="hidden" name="coverage_change" value="{{ analysis.get('coverage_change_percent', 'N/A') }}">
+
+                <button type="submit" class="pdf-btn">
+                    ⬇ Download PDF Report
+                </button>
+            </form>
+        </section>
+
+    {% else %}
+
+        <section class="section empty-state">
+            <div class="emoji">🌍</div>
+            <h2>Start Your Green Coverage Analysis</h2>
+            <p class="section-description" style="margin-top:12px;">
+                Enter a location above to view satellite imagery,
+                NDVI vegetation coverage, land-cover distribution
+                and the EcoGuard target comparison.
+            </p>
+        </section>
+
+    {% endif %}
+
+</main>
+
+<footer class="footer">
+    EcoGuard | Satellite-based Environmental Monitoring
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+{% if analysis %}
+<script>
+    const map = L.map("coverageMap");
+
+    const locationLat = Number(
+        {{ location_data.get("latitude", 23.685) if location_data else 23.685 }}
+    );
+
+    const locationLon = Number(
+        {{ location_data.get("longitude", 90.3563) if location_data else 90.3563 }}
+    );
+
+    map.setView([locationLat, locationLon], 11);
+
+    const satelliteLayer = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+            attribution: "Tiles © Esri"
+        }
+    );
+
+    satelliteLayer.addTo(map);
+
+    const ndviUrl = {{ analysis.get("ndvi_tile_url", "")|tojson }};
+    const landcoverUrl = {{ analysis.get("landcover_tile_url", "")|tojson }};
+
+    let ndviLayer = null;
+    let landcoverLayer = null;
+
+    if (ndviUrl) {
+        ndviLayer = L.tileLayer(ndviUrl, {
+            opacity: 0.75,
+            attribution: "Google Earth Engine NDVI"
+        });
+    }
+
+    if (landcoverUrl) {
+        landcoverLayer = L.tileLayer(landcoverUrl, {
+            opacity: 0.75,
+            attribution: "Google Earth Engine Land Cover"
+        });
+    }
+
+    const satelliteBtn = document.getElementById("satelliteBtn");
+    const ndviBtn = document.getElementById("ndviBtn");
+    const landcoverBtn = document.getElementById("landcoverBtn");
+
+    function activateButton(activeButton) {
+        [satelliteBtn, ndviBtn, landcoverBtn].forEach(button => {
+            button.classList.remove("active");
+        });
+
+        activeButton.classList.add("active");
+    }
+
+    satelliteBtn.addEventListener("click", function () {
+        if (ndviLayer) map.removeLayer(ndviLayer);
+        if (landcoverLayer) map.removeLayer(landcoverLayer);
+
+        if (!map.hasLayer(satelliteLayer)) {
+            satelliteLayer.addTo(map);
+        }
+
+        activateButton(satelliteBtn);
+    });
+
+    ndviBtn.addEventListener("click", function () {
+        if (!ndviLayer) {
+            alert("NDVI map tiles are not available for this analysis.");
+            return;
+        }
+
+        if (landcoverLayer) map.removeLayer(landcoverLayer);
+
+        if (!map.hasLayer(satelliteLayer)) {
+            satelliteLayer.addTo(map);
+        }
+
+        if (!map.hasLayer(ndviLayer)) {
+            ndviLayer.addTo(map);
+        }
+
+        activateButton(ndviBtn);
+    });
+
+    landcoverBtn.addEventListener("click", function () {
+        if (!landcoverLayer) {
+            alert("Land-cover map tiles are not available for this analysis.");
+            return;
+        }
+
+        if (ndviLayer) map.removeLayer(ndviLayer);
+
+        if (!map.hasLayer(satelliteLayer)) {
+            satelliteLayer.addTo(map);
+        }
+
+        if (!map.hasLayer(landcoverLayer)) {
+            landcoverLayer.addTo(map);
+        }
+
+        activateButton(landcoverBtn);
+    });
+
+    setTimeout(function () {
+        map.invalidateSize();
+    }, 300);
+</script>
+{% endif %}
+
+</body>
+</html>

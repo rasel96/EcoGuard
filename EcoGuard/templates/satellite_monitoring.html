@@ -1,0 +1,2205 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>EcoGuard | Satellite Monitoring</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --green: #16834f;
+    --dark: #103b29;
+    --light: #eaf6ee;
+    --text: #193b2b;
+    --muted: #718177;
+    --border: #e2ebe4;
+    --white: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: #f3f7f4;
+    color: var(--text);
+}
+
+/* NAVBAR */
+
+header {
+    height: 76px;
+    padding: 0 6%;
+    background: rgba(12, 48, 32, .97);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1000;
+    box-shadow: 0 5px 20px #0002;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    width: 43px;
+    height: 43px;
+    background: #ffffff18;
+    border: 1px solid #ffffff35;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    color: #8ce7a9;
+    font-size: 21px;
+}
+
+.logo h2 {
+    font-size: 19px;
+    letter-spacing: 1px;
+}
+
+.logo small {
+    display: block;
+    font-size: 10px;
+    color: #c2dfce;
+    margin-top: 3px;
+    letter-spacing: .6px;
+}
+
+.back-link {
+    color: #d6f2df;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 16px;
+    border: 1px solid #ffffff35;
+    border-radius: 9px;
+    transition: .25s;
+}
+
+.back-link:hover {
+    background: #ffffff18;
+    color: white;
+}
+
+/* HERO BACKGROUND */
+
+.hero {
+    min-height: 430px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 65px 7%;
+    color: white;
+    background: #123c29;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    animation: forestSlideshow 30s infinite;
+    transform: scale(1.04);
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgba(5, 35, 22, .94), rgba(7, 48, 29, .72), rgba(5, 35, 22, .45)),
+        linear-gradient(0deg, rgba(4, 32, 20, .35), transparent);
+}
+
+@keyframes forestSlideshow {
+    0%, 28% {
+        background-image: url("https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2000&q=85");
+        transform: scale(1.04);
+    }
+
+    33%, 61% {
+        background-image: url("https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2000&q=85");
+        transform: scale(1.10);
+    }
+
+    66%, 94% {
+        background-image: url("https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=2000&q=85");
+        transform: scale(1.04);
+    }
+
+    100% {
+        background-image: url("https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2000&q=85");
+    }
+}
+
+.hero-content {
+    max-width: 760px;
+    position: relative;
+    z-index: 2;
+    animation: fadeUp 1s ease both;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 14px;
+    border: 1px solid #ffffff40;
+    background: #ffffff15;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    margin-bottom: 22px;
+    color: #d6ffe2;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #70ed9a;
+    border-radius: 50%;
+    box-shadow: 0 0 12px #70ed9a;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    50% {
+        opacity: .4;
+        transform: scale(.75);
+    }
+}
+
+.hero h1 {
+    font-size: clamp(32px, 5vw, 53px);
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 17px;
+}
+
+.hero h1 span {
+    color: #82e9a4;
+}
+
+.hero p {
+    max-width: 650px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #e0eee5;
+}
+
+.hero-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 27px;
+}
+
+.hero-feature {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #ffffff17;
+    border: 1px solid #ffffff25;
+    font-size: 11px;
+    color: #effff3;
+}
+
+.hero-feature i {
+    color: #8be8a7;
+    margin-right: 6px;
+}
+
+/* MAIN */
+
+.container {
+    max-width: 1250px;
+    margin: 35px auto;
+    padding: 0 22px;
+}
+
+.section-heading {
+    margin-bottom: 19px;
+}
+
+.section-heading small {
+    color: var(--green);
+    font-weight: 800;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.section-heading h2 {
+    font-size: 23px;
+    margin-top: 7px;
+}
+
+.section-heading p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+    margin-top: 7px;
+}
+
+/* SEARCH */
+
+.search-panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 27px;
+    box-shadow: 0 12px 35px #173c2910;
+    margin-top: -55px;
+    position: relative;
+    z-index: 10;
+    animation: fadeUp .8s ease both;
+}
+
+.search-title {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 19px;
+}
+
+.search-title-icon {
+    width: 45px;
+    height: 45px;
+    background: var(--light);
+    color: var(--green);
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+}
+
+.search-title h3 {
+    font-size: 16px;
+}
+
+.search-title p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+}
+
+.search-row {
+    display: flex;
+    gap: 12px;
+}
+
+.search-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.search-wrapper input {
+    width: 100%;
+    height: 53px;
+    border: 1px solid #d7e3da;
+    border-radius: 10px;
+    padding: 0 17px 0 45px;
+    font-size: 13px;
+    outline: none;
+    color: var(--text);
+    transition: .25s;
+}
+
+.search-wrapper input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 4px #16834f12;
+}
+
+.search-icon {
+    position: absolute;
+    top: 18px;
+    left: 16px;
+    color: #7a9181;
+    z-index: 1;
+}
+
+@app.route("/green-coverage", methods=["GET", "POST"])
+@login_required
+def green_coverage():
+    analysis = None
+    location = None
+    location_data = None
+    error_message = None
+
+    if request.method == "POST":
+        place_name = request.form.get("location", "").strip()
+
+        if not place_name:
+            flash("Please enter a location.", "warning")
+            return redirect(url_for("green_coverage"))
+
+        try:
+            location_data = get_location(place_name)
+
+            if not location_data:
+                raise ValueError("Location not found. Please try another location.")
+
+            bounding_box = (
+                location_data.get("boundingbox")
+                or location_data.get("bounding_box")
+            )
+
+            if not bounding_box:
+                raise ValueError("Could not retrieve the location boundary.")
+
+            analysis = analyze_green_coverage(bounding_box)
+            location = location_data.get("name", place_name)
+
+            if not analysis:
+                raise ValueError("Green coverage analysis returned no data.")
+
+        except Exception as error:
+            print("GREEN COVERAGE ERROR:", error, flush=True)
+            error_message = str(error)
+            flash(
+                "Green Coverage analysis failed: " + error_message,
+                "danger"
+            )
+            return redirect(url_for("green_coverage"))
+
+    return render_template(
+        "green_coverage.html",
+        analysis=analysis,
+        location=location,
+        location_data=location_data,
+        green_target=GREEN_TARGET,
+        error_message=error_message
+    )
+
+
+@app.route("/green-coverage/report/pdf", methods=["POST"])
+@login_required
+def green_coverage_pdf():
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import mm
+        from reportlab.platypus import (
+            SimpleDocTemplate,
+            Paragraph,
+            Spacer,
+            Table,
+            TableStyle
+        )
+        from datetime import datetime
+
+        location = request.form.get("location", "Unknown location")
+        green_coverage = request.form.get("green_coverage", "N/A")
+        ndvi_coverage = request.form.get("ndvi_coverage", "N/A")
+        average_ndvi = request.form.get("average_ndvi", "N/A")
+        total_area = request.form.get("total_area", "N/A")
+        green_area = request.form.get("green_area", "N/A")
+        target = request.form.get("target", str(GREEN_TARGET))
+        ndvi_change = request.form.get("ndvi_change", "N/A")
+        coverage_change = request.form.get("coverage_change", "N/A")
+        report_date = datetime.now().strftime("%d %B %Y, %I:%M %p")
+
+        pdf_buffer = io.BytesIO()
+
+        document = SimpleDocTemplate(
+            pdf_buffer,
+            pagesize=A4,
+            rightMargin=18 * mm,
+            leftMargin=18 * mm,
+            topMargin=18 * mm,
+            bottomMargin=18 * mm
+        )
+
+        styles = getSampleStyleSheet()
+        styles.add(ParagraphStyle(
+            name="EcoTitle",
+            parent=styles["Title"],
+            textColor=colors.HexColor("#166534"),
+            fontSize=22,
+            leading=28,
+            spaceAfter=8
+        ))
+        styles.add(ParagraphStyle(
+            name="EcoSubtitle",
+            parent=styles["Normal"],
+            textColor=colors.HexColor("#64748b"),
+            fontSize=9,
+            leading=14
+        ))
+
+        story = []
+
+        story.append(Paragraph("EcoGuard", styles["EcoTitle"]))
+        story.append(Paragraph(
+            "Green Coverage Analysis Report",
+            styles["Heading2"]
+        ))
+        story.append(Paragraph(
+            f"Location: {location}<br/>Generated: {report_date}",
+            styles["EcoSubtitle"]
+        ))
+        story.append(Spacer(1, 12))
+
+        data = [
+            ["Metric", "Result"],
+            ["Green coverage (project land-cover metric)", green_coverage + "%"],
+            ["NDVI-based vegetation coverage", ndvi_coverage + "%"],
+            ["Average NDVI", average_ndvi],
+            ["Total analyzed area", total_area + " hectares"],
+            ["Green area", green_area + " hectares"],
+            ["EcoGuard project target", target + "%"],
+            ["NDVI change", ndvi_change],
+            ["Coverage change", coverage_change]
+        ]
+
+        table = Table(data, colWidths=[105 * mm, 55 * mm])
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#166534")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#d1d5db")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [
+                colors.white,
+                colors.HexColor("#f0fdf4")
+            ]),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 9),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8)
+        ]))
+
+        story.append(table)
+        story.append(Spacer(1, 18))
+
+        story.append(Paragraph(
+            "How to interpret this report",
+            styles["Heading2"]
+        ))
+        story.append(Paragraph(
+            "Green coverage and NDVI-based vegetation coverage are "
+            "different measurements. NDVI estimates vegetation activity "
+            "from satellite reflectance; it does not directly count trees "
+            "or prove that every vegetated area is suitable for planting.",
+            styles["BodyText"]
+        ))
+        story.append(Spacer(1, 8))
+
+        story.append(Paragraph(
+            f"The {target}% target is an EcoGuard project benchmark. "
+            "It is configurable and should not be interpreted as a "
+            "universal ecological standard.",
+            styles["BodyText"]
+        ))
+        story.append(Spacer(1, 8))
+
+        story.append(Paragraph(
+            "Data limitations: satellite observations may be affected by "
+            "cloud cover, image availability, land-cover classification "
+            "accuracy and dataset reference dates.",
+            styles["BodyText"]
+        ))
+
+        document.build(story)
+        pdf_buffer.seek(0)
+
+        safe_location = re.sub(
+            r"[^A-Za-z0-9_-]+",
+            "_",
+            location
+        ).strip("_") or "location"
+
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name=f"EcoGuard_Green_Coverage_{safe_location}.pdf",
+            mimetype="application/pdf"
+        )
+
+    except ImportError:
+        flash(
+            "PDF library is not installed. Run: pip install reportlab",
+            "danger"
+        )
+        return redirect(url_for("green_coverage"))
+
+    except Exception as error:
+        print("GREEN COVERAGE PDF ERROR:", error, flush=True)
+        flash("Could not generate PDF report: " + str(error), "danger")
+        return redirect(url_for("green_coverage"))
+
+.analyze-btn {
+    border: 0;
+    height: 53px;
+    padding: 0 25px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #16834f, #105d38);
+    color: white;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .25s;
+    box-shadow: 0 5px 13px #16834f35;
+}
+
+.analyze-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px #16834f45;
+}
+
+.analyze-btn:disabled {
+    opacity: .65;
+    cursor: wait;
+    transform: none;
+}
+
+.hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 12px;
+}
+
+.suggestions {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 30px #0002;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.suggestions[hidden] {
+    display: none;
+}
+
+.suggestion {
+    padding: 13px 15px;
+    border-bottom: 1px solid #edf2ee;
+    font-size: 12px;
+    cursor: pointer;
+    color: #344d3c;
+}
+
+.suggestion:hover {
+    background: #eff9f2;
+}
+
+.suggestion i {
+    color: var(--green);
+    margin-right: 9px;
+}
+
+/* FLASH */
+
+.error {
+    background: #fff0ed;
+    color: #a33;
+    border-left: 4px solid #d84b4b;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 12px;
+}
+
+/* RESULTS */
+
+.results {
+    margin-top: 38px;
+    animation: fadeUp .8s ease both;
+}
+
+.result-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.result-heading h2 {
+    font-size: 22px;
+}
+
+.result-heading p {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 7px;
+}
+
+.result-badge {
+    padding: 10px 14px;
+    border-radius: 30px;
+    background: #eaf6ee;
+    color: #176b45;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* METRICS */
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.metric {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 18px #173c2908;
+    transition: .3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px #173c2915;
+}
+
+.metric::after {
+    content: "";
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    right: -25px;
+    bottom: -30px;
+    border-radius: 50%;
+    background: #16834f09;
+}
+
+.metric-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    background: #eaf6ee;
+    color: var(--green);
+    border-radius: 12px;
+    font-size: 18px;
+    margin-bottom: 16px;
+}
+
+.metric small {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.metric strong {
+    display: block;
+    color: #176b45;
+    font-size: 25px;
+    margin-top: 9px;
+    word-break: break-word;
+}
+
+.metric p {
+    font-size: 10px;
+    color: #8b988f;
+    margin-top: 7px;
+    line-height: 1.5;
+}
+
+/* PANELS */
+
+.panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 19px;
+    box-shadow: 0 5px 18px #173c2908;
+}
+
+.panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.panel-heading h3 {
+    font-size: 16px;
+}
+
+.panel-heading h3 i {
+    color: var(--green);
+    margin-right: 8px;
+}
+
+.panel-heading small {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+#map {
+    width: 100%;
+    height: 430px;
+    border-radius: 12px;
+    z-index: 1;
+}
+
+.map-note,
+.warning {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.8;
+    margin-top: 13px;
+}
+
+/* TABLE */
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 400px;
+}
+
+td, th {
+    padding: 14px 12px;
+    border-bottom: 1px solid #edf1ee;
+    text-align: left;
+    font-size: 12px;
+}
+
+th {
+    color: #617368;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    background: #f7faf7;
+}
+
+td:last-child {
+    font-weight: 700;
+    color: #246b45;
+}
+
+/* COVERAGE */
+
+.coverage-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    flex-wrap: wrap;
+}
+
+.coverage-info strong {
+    color: #176b45;
+}
+
+.progress {
+    height: 13px;
+    background: #e8f0ea;
+    border-radius: 20px;
+    margin: 17px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #16834f, #80d99b);
+    border-radius: 20px;
+    transition: width 1.5s ease;
+}
+
+.notice {
+    padding: 15px;
+    background: #edf8f0;
+    border-left: 4px solid #25834e;
+    border-radius: 8px;
+    font-size: 11px;
+    color: #41644c;
+    line-height: 1.8;
+    margin-top: 15px;
+}
+
+/* CHART */
+
+.chart-wrap {
+    height: 310px;
+    width: 100%;
+    position: relative;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 17px;
+}
+
+.chart-panel {
+    min-width: 0;
+}
+
+/* TREE */
+
+.tree-highlight {
+    background: linear-gradient(120deg, #e9f8ee, #f6fbf7);
+    border: 1px solid #d9eddf;
+    padding: 22px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.tree-icon {
+    width: 65px;
+    height: 65px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: white;
+    color: #16834f;
+    font-size: 30px;
+}
+
+.tree-number {
+    font-size: 30px;
+    color: #176b45;
+    font-weight: 900;
+}
+
+.tree-highlight p {
+    font-size: 11px;
+    color: #718177;
+    margin-top: 5px;
+}
+
+/* EMPTY / FOOTER */
+
+.empty {
+    text-align: center;
+    padding: 30px 15px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.empty i {
+    font-size: 27px;
+    color: #9ab9a2;
+    margin-bottom: 10px;
+}
+
+footer {
+    background: #103b29;
+    color: #c6dfce;
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    margin-top: 55px;
+}
+
+footer i {
+    color: #80d99b;
+    margin-right: 5px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:950px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media(max-width:600px) {
+    header {
+        padding: 0 5%;
+        height: 68px;
+    }
+
+    .logo h2 {
+        font-size: 16px;
+    }
+
+    .back-link {
+        font-size: 10px;
+        padding: 9px;
+    }
+
+    .hero {
+        min-height: 390px;
+        padding: 55px 6%;
+    }
+
+    .hero h1 {
+        font-size: 34px;
+    }
+
+    .hero p {
+        font-size: 12px;
+    }
+
+    .container {
+        padding: 0 13px;
+        margin-top: 25px;
+    }
+
+    .search-panel {
+        padding: 19px;
+        margin-top: -35px;
+    }
+
+    .search-row {
+        flex-direction: column;
+    }
+
+    .analyze-btn {
+        width: 100%;
+    }
+
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .metric {
+        padding: 14px;
+    }
+
+    .metric strong {
+        font-size: 20px;
+    }
+
+    .panel {
+        padding: 17px;
+    }
+
+    #map {
+        height: 330px;
+    }
+
+    .chart-wrap {
+        height: 260px;
+    }
+
+    .tree-highlight {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media(prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        <div class="logo-icon">
+            <i class="fa-solid fa-leaf"></i>
+        </div>
+        <div>
+            <h2>ECOGUARD</h2>
+            <small>SATELLITE MONITORING SYSTEM</small>
+        </div>
+    </div>
+
+    <a class="back-link" href="{{ url_for('dashboard') }}">
+        <i class="fa-solid fa-arrow-left"></i> Dashboard
+    </a>
+</header>
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+
+        <div class="eyebrow">
+            <span class="live-dot"></span>
+            SATELLITE-BASED ENVIRONMENTAL INTELLIGENCE
+        </div>
+
+        <h1>
+            Monitor Nature.<br>
+            <span>Protect Our Forests.</span>
+        </h1>
+
+        <p>
+            Explore vegetation conditions, monitor forest-cover changes
+            and understand environmental indicators using satellite
+            observations and Google Earth Engine.
+        </p>
+
+        <div class="hero-features">
+            <div class="hero-feature">
+                <i class="fa-solid fa-satellite"></i>
+                Sentinel-2 Data
+            </div>
+
+            <div class="hero-feature">
+                <i class="fa-solid fa-earth-asia"></i>
+                Bangladesh Locations
+            </div>
+
+            <div class="hero-feature">
+                <i class="fa-solid fa-chart-line"></i>
+                Environmental Analysis
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<main class="container">
+
+    <!-- FLASH MESSAGES -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+
+    <!-- SEARCH -->
+
+    <section class="search-panel">
+
+        <div class="search-title">
+            <div class="search-title-icon">
+                <i class="fa-solid fa-magnifying-glass-location"></i>
+            </div>
+
+            <div>
+                <h3>Search Monitoring Location</h3>
+                <p>Find a district, upazila, forest or specific location in Bangladesh.</p>
+            </div>
+        </div>
+
+        <form id="searchForm"
+              method="POST"
+              action="{{ url_for('satellite_monitoring_analyze') }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <div class="search-row">
+
+                <div class="search-wrapper">
+
+                    <i class="fa-solid fa-location-dot search-icon"></i>
+
+                    <input
+                        type="text"
+                        id="locationInput"
+                        name="location"
+                        placeholder="Example: Sundarbans, Khulna, Cox's Bazar..."
+                        autocomplete="off"
+                        required
+                    >
+
+                    <div id="suggestions"
+                         class="suggestions"
+                         hidden>
+                    </div>
+
+                </div>
+
+                <button type="submit"
+                        class="analyze-btn"
+                        id="analyzeButton">
+
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    Analyze Location
+
+                </button>
+
+            </div>
+
+        </form>
+
+        <p class="hint" id="selectionHint">
+            <i class="fa-solid fa-circle-info"></i>
+            Enter a location and select a suggestion for better location matching.
+        </p>
+
+    </section>
+
+
+    <!-- ANALYSIS RESULTS -->
+
+    {% if analysis %}
+
+    <section class="results" id="analysisResults">
+
+        <div class="result-heading">
+
+            <div>
+                <h2>
+                    <i class="fa-solid fa-chart-pie" style="color:#16834f"></i>
+                    Satellite Analysis Results
+                </h2>
+
+                <p>
+                    <i class="fa-solid fa-location-dot"></i>
+                    {{ location }}
+                </p>
+            </div>
+
+            <div class="result-badge">
+                <i class="fa-solid fa-circle-check"></i>
+                ANALYSIS COMPLETED
+            </div>
+
+        </div>
+
+
+        <!-- METRIC CARDS -->
+
+        <div class="metrics-grid">
+
+            <div class="metric">
+                <div class="metric-icon">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+
+                <small>Current NDVI</small>
+
+                <strong class="counter"
+                        data-value="{{ analysis.current_ndvi if analysis.current_ndvi is not none else 0 }}"
+                        data-decimals="3">
+                    0
+                </strong>
+
+                <p>Satellite vegetation index</p>
+            </div>
+
+
+            <div class="metric">
+                <div class="metric-icon">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+
+                <small>Green Coverage</small>
+
+                <strong class="counter"
+                        data-value="{{ analysis.current_coverage_percent if analysis.current_coverage_percent is not none else 0 }}"
+                        data-decimals="2"
+                        data-suffix="%">
+                    0
+                </strong>
+
+                <p>Estimated vegetation coverage</p>
+            </div>
+
+
+            <div class="metric">
+                <div class="metric-icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+
+                <small>NDVI Change</small>
+
+                <strong class="counter"
+                        data-value="{{ analysis.ndvi_change if analysis.ndvi_change is not none else 0 }}"
+                        data-decimals="3">
+                    0
+                </strong>
+
+                <p>Current vs previous period</p>
+            </div>
+
+
+            <div class="metric">
+                <div class="metric-icon">
+                    <i class="fa-solid fa-tree"></i>
+                </div>
+
+                <small>Vegetation Area</small>
+
+                <strong style="font-size:20px">
+                    {{ "%.2f"|format(analysis.vegetation_area_current / 10000)
+                       if analysis.vegetation_area_current is not none else "N/A" }}
+                    ha
+                </strong>
+
+                <p>Estimated vegetation area</p>
+            </div>
+
+        </div>
+
+
+        <!-- SATELLITE MAP -->
+
+        <section class="panel">
+
+            <div class="panel-heading">
+                <h3>
+                    <i class="fa-solid fa-earth-asia"></i>
+                    Geographical Location & Satellite View
+                </h3>
+
+                <small>Satellite imagery map</small>
+            </div>
+
+            <div id="map"></div>
+
+            <p class="map-note">
+                The map displays the selected location over satellite imagery.
+                The vegetation statistics are calculated separately using
+                Google Earth Engine satellite data.
+            </p>
+
+        </section>
+
+
+        <!-- GREEN COVERAGE -->
+
+        <section class="panel">
+
+            <div class="panel-heading">
+                <h3>
+                    <i class="fa-solid fa-chart-pie"></i>
+                    Green Coverage Analysis
+                </h3>
+
+                <small>Project benchmark: {{ green_target }}%</small>
+            </div>
+
+            {% if analysis.current_coverage_percent is not none %}
+
+            <div class="coverage-info">
+                <span>Current Estimated Green Coverage</span>
+
+                <strong>
+                    {{ "%.2f"|format(analysis.current_coverage_percent) }}%
+                </strong>
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar"
+                     id="coverageBar"
+                     data-width="{{ [analysis.current_coverage_percent, 100]|min }}">
+                </div>
+            </div>
+
+            <div class="coverage-info">
+                <span>EcoGuard Project Target: {{ green_target }}%</span>
+
+                <strong>
+                    Target Gap:
+                    {{ "%.2f"|format(tree_data.coverage_gap)
+                       if tree_data.coverage_gap is not none else "N/A" }}
+                    percentage points
+                </strong>
+            </div>
+
+            {% else %}
+
+            <div class="empty">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <p>Green coverage information is unavailable.</p>
+            </div>
+
+            {% endif %}
+
+            <div class="notice">
+                <i class="fa-solid fa-circle-info"></i>
+
+                The {{ green_target }}% value is an EcoGuard project benchmark,
+                not a universal ecological standard. NDVI-based vegetation
+                coverage is a proxy and does not directly measure tree cover
+                or forest cover.
+            </div>
+
+        </section>
+
+
+        <!-- HISTORICAL FOREST LOSS -->
+
+        <section class="panel">
+
+            <div class="panel-heading">
+                <h3>
+                    <i class="fa-solid fa-tree"></i>
+                    Historical Forest Loss (2001–2025)
+                </h3>
+
+                <small>Hansen Global Forest Change</small>
+            </div>
+
+            {% set history = analysis.historical_forest_loss or {} %}
+
+            {% if history %}
+
+            <div class="metrics-grid">
+
+                <div class="metric">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-tree"></i>
+                    </div>
+
+                    <small>Baseline Forest Area</small>
+
+                    <strong>
+                        {{ "%.2f"|format(history.baseline_forest_area_hectares)
+                           if history.baseline_forest_area_hectares is not none else "N/A" }}
+                    </strong>
+
+                    <p>Estimated baseline forest area in hectares</p>
+                </div>
+
+
+                <div class="metric">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+
+                    <small>Total Historical Loss</small>
+
+                    <strong>
+                        {{ "%.2f"|format(history.total_forest_loss_hectares)
+                           if history.total_forest_loss_hectares is not none else "N/A" }}
+                    </strong>
+
+                    <p>Gross tree-cover loss in hectares</p>
+                </div>
+
+
+                <div class="metric">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-percent"></i>
+                    </div>
+
+                    <small>Historical Loss Percentage</small>
+
+                    <strong>
+                        {{ "%.2f"|format(history.historical_loss_percent)
+                           if history.historical_loss_percent is not none else "N/A" }}%
+                    </strong>
+
+                    <p>Relative to baseline forest area</p>
+                </div>
+
+
+                <div class="metric">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+
+                    <small>Recent Loss (2021–2025)</small>
+
+                    <strong>
+                        {{ "%.2f"|format(history.recent_5_year_loss_hectares)
+                           if history.recent_5_year_loss_hectares is not none else "N/A" }}
+                    </strong>
+
+                    <p>Gross forest-cover loss in hectares</p>
+                </div>
+
+            </div>
+
+
+            <div class="chart-wrap">
+                <canvas id="forestLossChart"></canvas>
+            </div>
+
+            <p class="warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+
+                Historical values represent gross tree-cover loss detected
+                by the Hansen dataset. They do not necessarily indicate
+                permanent deforestation. Results depend on the selected
+                boundary and dataset quality.
+            </p>
+
+            {% else %}
+
+            <div class="empty">
+                <i class="fa-solid fa-database"></i>
+                <p>Historical forest-loss data is unavailable for this location.</p>
+            </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- TREE PLANTATION -->
+
+        <section class="panel">
+
+            <div class="panel-heading">
+                <h3>
+                    <i class="fa-solid fa-seedling"></i>
+                    Plantation Planning Estimate
+                </h3>
+
+                <small>Based on project target</small>
+            </div>
+
+            {% if tree_data.minimum_trees is not none %}
+
+            <div class="tree-highlight">
+
+                <div class="tree-icon">
+                    <i class="fa-solid fa-tree"></i>
+                </div>
+
+                <div>
+                    <div class="tree-number counter"
+                         data-value="{{ tree_data.minimum_trees }}"
+                         data-decimals="0">
+                        0
+                    </div>
+
+                    <strong>Estimated Trees Required</strong>
+
+                    <p>Approximate planning estimate for the project target gap</p>
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty">
+                <i class="fa-solid fa-seedling"></i>
+                <p>Tree requirement could not be calculated.</p>
+            </div>
+
+            {% endif %}
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <tr>
+                        <th>Measurement</th>
+                        <th>Result</th>
+                    </tr>
+
+                    <tr>
+                        <td>Green coverage target</td>
+                        <td>{{ green_target }}%</td>
+                    </tr>
+
+                    <tr>
+                        <td>Current green coverage</td>
+                        <td>
+                            {{ "%.2f"|format(analysis.current_coverage_percent)
+                               if analysis.current_coverage_percent is not none else "Unavailable" }}
+                            {% if analysis.current_coverage_percent is not none %}%{% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Coverage gap</td>
+                        <td>
+                            {{ tree_data.coverage_gap
+                               if tree_data.coverage_gap is not none else "Unavailable" }}
+                            {% if tree_data.coverage_gap is not none %}%{% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Estimated trees required</td>
+                        <td>
+                            {{ "{:,}".format(tree_data.minimum_trees)
+                               if tree_data.minimum_trees is not none else "Unavailable" }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Planning density</td>
+                        <td>{{ trees_per_hectare }} trees/hectare</td>
+                    </tr>
+
+                </table>
+
+            </div>
+
+            <div class="notice">
+                Tree requirement is a theoretical planning estimate based
+                on the configured coverage target and planting density.
+                It is not a field-verified planting prescription.
+
+                Natural wetlands, grasslands, rivers, settlements and
+                protected ecosystems should not be converted into
+                plantation areas without ecological assessment.
+            </div>
+
+        </section>
+
+
+        <!-- NDVI CHART -->
+
+        <div class="chart-grid">
+
+            <section class="panel chart-panel">
+
+                <div class="panel-heading">
+                    <h3>
+                        <i class="fa-solid fa-chart-column"></i>
+                        NDVI Comparison
+                    </h3>
+                </div>
+
+                <div class="chart-wrap">
+                    <canvas id="ndviChart"></canvas>
+                </div>
+
+            </section>
+
+
+            <!-- RAINFALL -->
+
+            <section class="panel chart-panel">
+
+                <div class="panel-heading">
+                    <h3>
+                        <i class="fa-solid fa-cloud-rain"></i>
+                        Rainfall Information
+                    </h3>
+                </div>
+
+                <div class="metric" style="box-shadow:none">
+
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-cloud-showers-heavy"></i>
+                    </div>
+
+                    <small>Current Observation Period</small>
+
+                    <strong>
+                        {{ "%.1f"|format(analysis.rainfall)
+                           if analysis.rainfall is not none else "N/A" }}
+                        mm
+                    </strong>
+
+                    <p>
+                        Estimated rainfall from the CHIRPS dataset.
+                        Rainfall provides environmental context and
+                        does not directly prove forest loss.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- DATA AVAILABILITY -->
+
+        <section class="panel">
+
+            <div class="panel-heading">
+                <h3>
+                    <i class="fa-solid fa-database"></i>
+                    Observation Period & Data Availability
+                </h3>
+            </div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <tr>
+                        <th>Measurement</th>
+                        <th>Result</th>
+                    </tr>
+
+                    <tr>
+                        <td>Current observation period</td>
+                        <td>
+                            {{ analysis.analysis_start }} to {{ analysis.analysis_end }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Previous observation period</td>
+                        <td>
+                            {{ analysis.previous_start }} to {{ analysis.previous_end }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Current satellite images</td>
+                        <td>{{ analysis.current_image_count }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Previous satellite images</td>
+                        <td>{{ analysis.previous_image_count }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Estimated vegetation change</td>
+                        <td>
+                            {{ "%.2f"|format(analysis.vegetation_loss)
+                               if analysis.vegetation_loss is not none else "Unavailable" }}
+                            {% if analysis.vegetation_loss is not none %}%{% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Rainfall estimate</td>
+                        <td>
+                            {{ "%.1f"|format(analysis.rainfall)
+                               if analysis.rainfall is not none else "Unavailable" }}
+                            {% if analysis.rainfall is not none %}mm{% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Location coordinates</td>
+                        <td>
+                            {% if location_data %}
+                                {{ location_data.latitude }},
+                                {{ location_data.longitude }}
+                            {% else %}
+                                Unavailable
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </section>
+
+    {% endif %}
+
+</main>
+
+
+<footer>
+    <i class="fa-solid fa-leaf"></i>
+    © 2026 EcoGuard | Satellite-Based Environmental Monitoring System
+</footer>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+/* =========================================
+   LOCATION AUTOCOMPLETE
+========================================= */
+
+const input = document.getElementById("locationInput");
+const box = document.getElementById("suggestions");
+const hint = document.getElementById("selectionHint");
+const form = document.getElementById("searchForm");
+const button = document.getElementById("analyzeButton");
+
+let debounceTimer;
+let selected = false;
+let suggestionRequest = 0;
+
+input.addEventListener("input", function() {
+
+    selected = false;
+
+    hint.textContent = "Choose a location from the suggestions.";
+
+    clearTimeout(debounceTimer);
+
+    const q = input.value.trim();
+
+    if (q.length < 2) {
+        box.hidden = true;
+        return;
+    }
+
+    debounceTimer = setTimeout(async function() {
+
+        const requestId = ++suggestionRequest;
+
+        try {
+
+            const response = await fetch(
+                "{{ url_for('suggest') }}?q=" + encodeURIComponent(q)
+            );
+
+            if (!response.ok) {
+                throw new Error("Suggestion request failed");
+            }
+
+            const results = await response.json();
+
+            if (requestId !== suggestionRequest) return;
+
+            box.innerHTML = "";
+
+            results.forEach(function(item) {
+
+                const div = document.createElement("div");
+
+                div.className = "suggestion";
+
+                const icon = document.createElement("i");
+                icon.className = "fa-solid fa-location-dot";
+
+                div.appendChild(icon);
+                div.appendChild(document.createTextNode(item.name));
+
+                div.addEventListener("click", function() {
+
+                    input.value = item.name;
+
+                    selected = true;
+
+                    box.hidden = true;
+
+                    hint.textContent = "Selected: " + item.name;
+
+                });
+
+                box.appendChild(div);
+
+            });
+
+            box.hidden = results.length === 0;
+
+            if (results.length === 0) {
+                hint.textContent = "No matching locations found.";
+            }
+
+        } catch(error) {
+
+            box.hidden = true;
+
+            hint.textContent =
+                "Location suggestions are temporarily unavailable.";
+
+            console.error("Autocomplete error:", error);
+
+        }
+
+    }, 450);
+
+});
+
+
+document.addEventListener("click", function(e) {
+
+    if (!box.contains(e.target) && e.target !== input) {
+        box.hidden = true;
+    }
+
+});
+
+
+/* =========================================
+   FORM SUBMISSION
+========================================= */
+
+form.addEventListener("submit", function(e) {
+
+    if (!input.value.trim()) {
+
+        e.preventDefault();
+
+        alert("Please enter a location.");
+
+        return;
+    }
+
+    button.disabled = true;
+
+    button.innerHTML =
+        '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+
+});
+
+
+/* =========================================
+   ANIMATED COUNTERS
+========================================= */
+
+function animateCounters() {
+
+    document.querySelectorAll(".counter").forEach(function(element) {
+
+        const target = Number(element.dataset.value);
+
+        const decimals = Number(element.dataset.decimals || 0);
+
+        const suffix = element.dataset.suffix || "";
+
+        if (!Number.isFinite(target)) return;
+
+        const duration = 1200;
+        const startTime = performance.now();
+
+        function update(now) {
+
+            const progress = Math.min(
+                (now - startTime) / duration,
+                1
+            );
+
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            const value = target * eased;
+
+            element.textContent =
+                value.toLocaleString(undefined, {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }) + suffix;
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+
+        }
+
+        requestAnimationFrame(update);
+
+    });
+
+}
+
+
+/* =========================================
+   GREEN COVERAGE PROGRESS
+========================================= */
+
+window.addEventListener("load", function() {
+
+    animateCounters();
+
+    const bar = document.getElementById("coverageBar");
+
+    if (bar) {
+
+        setTimeout(function() {
+
+            bar.style.width =
+                bar.dataset.width + "%";
+
+        }, 300);
+
+    }
+
+});
+
+
+/* =========================================
+   NDVI COMPARISON CHART
+========================================= */
+
+{% if analysis %}
+
+const currentNdvi = {{ analysis.current_ndvi|tojson }};
+const previousNdvi = {{ analysis.previous_ndvi|tojson }};
+
+const ndviCanvas = document.getElementById("ndviChart");
+
+if (ndviCanvas) {
+
+    new Chart(ndviCanvas, {
+
+        type: "bar",
+
+        data: {
+
+            labels: [
+                "Previous Period",
+                "Current Period"
+            ],
+
+            datasets: [{
+
+                label: "Average NDVI",
+
+                data: [
+                    previousNdvi,
+                    currentNdvi
+                ],
+
+                backgroundColor: [
+                    "#9ac8a8",
+                    "#16834f"
+                ],
+
+                borderRadius: 8,
+
+                borderWidth: 0
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+                    display: true
+                }
+
+            },
+
+            scales: {
+
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 1
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =========================================
+   HISTORICAL FOREST LOSS CHART
+========================================= */
+
+{% if analysis.historical_forest_loss and analysis.annual_forest_loss %}
+
+const forestYears = {{ analysis.annual_forest_loss
+    | map(attribute='year')
+    | list
+    | tojson
+}};
+
+const forestLossValues = {{ analysis.annual_forest_loss
+    | map(attribute='loss_area_hectares')
+    | list
+    | tojson
+}};
+
+const forestCanvas = document.getElementById("forestLossChart");
+
+if (forestCanvas) {
+
+    new Chart(forestCanvas, {
+
+        type: "bar",
+
+        data: {
+
+            labels: forestYears,
+
+            datasets: [{
+
+                label: "Gross Forest Cover Loss (hectares)",
+
+                data: forestLossValues,
+
+                backgroundColor: "#218653",
+
+                borderRadius: 5,
+
+                borderWidth: 0
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+                    display: true
+                }
+
+            },
+
+            scales: {
+
+                y: {
+                    beginAtZero: true,
+
+                    title: {
+                        display: true,
+                        text: "Loss (hectares)"
+                    }
+                },
+
+                x: {
+                    title: {
+                        display: true,
+                        text: "Year"
+                    }
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+{% endif %}
+
+
+/* =========================================
+   LEAFLET SATELLITE MAP
+========================================= */
+
+{% if location_data %}
+
+const lat = {{ location_data.latitude|tojson }};
+const lon = {{ location_data.longitude|tojson }};
+const bounds = {{ location_data.boundingbox|tojson }};
+
+const mapElement = document.getElementById("map");
+
+if (mapElement) {
+
+    const map = L.map("map").setView([lat, lon], 10);
+
+    L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+            attribution: "Tiles © Esri",
+            maxZoom: 19
+        }
+    ).addTo(map);
+
+    L.marker([lat, lon])
+        .addTo(map)
+        .bindPopup({{ location|tojson }})
+        .openPopup();
+
+    if (bounds && bounds.length === 4) {
+
+        const south = Number(bounds[0]);
+        const north = Number(bounds[1]);
+        const west = Number(bounds[2]);
+        const east = Number(bounds[3]);
+
+        if (
+            Number.isFinite(south) &&
+            Number.isFinite(north) &&
+            Number.isFinite(west) &&
+            Number.isFinite(east)
+        ) {
+
+            const mapBounds = [
+                [south, west],
+                [north, east]
+            ];
+
+            L.rectangle(mapBounds, {
+
+                color: "#20d46b",
+                weight: 2,
+                fillColor: "#20d46b",
+                fillOpacity: 0.08
+
+            }).addTo(map);
+
+            map.fitBounds(mapBounds);
+
+        }
+
+    }
+
+    setTimeout(function() {
+        map.invalidateSize();
+    }, 400);
+
+}
+
+{% endif %}
+
+{% endif %}
+
+</script>
+
+</body>
+</html>

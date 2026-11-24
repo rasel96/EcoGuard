@@ -1,0 +1,571 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoGuard | Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    color: white;
+    background: #071b13;
+    overflow-x: hidden;
+}
+
+/* ==================================================
+   PROFESSIONAL FOREST BACKGROUND ANIMATION
+================================================== */
+
+.background {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    overflow: hidden;
+    background: #071b13;
+}
+
+.background-slide {
+    position: absolute;
+    inset: -2%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    animation:
+        forestFade 24s infinite,
+        forestZoom 24s infinite alternate;
+    will-change: opacity, transform;
+}
+
+.background-slide:nth-child(1) {
+    background-image: url("https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=85");
+    animation-delay: 0s;
+}
+
+.background-slide:nth-child(2) {
+    background-image: url("https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1920&q=85");
+    animation-delay: -8s;
+}
+
+.background-slide:nth-child(3) {
+    background-image: url("https://images.unsplash.com/photo-1511497584788-876760111969?w=1920&q=85");
+    animation-delay: -16s;
+}
+
+@keyframes forestFade {
+    0%, 100% {
+        opacity: 0;
+    }
+
+    8%, 33% {
+        opacity: 1;
+    }
+
+    41% {
+        opacity: 0;
+    }
+}
+
+@keyframes forestZoom {
+    from {
+        transform: scale(1.02);
+    }
+
+    to {
+        transform: scale(1.10);
+    }
+}
+
+/* PROFESSIONAL DARK OVERLAY */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+
+    background:
+        linear-gradient(
+            110deg,
+            rgba(2, 17, 11, .88) 0%,
+            rgba(3, 28, 17, .76) 50%,
+            rgba(2, 18, 12, .88) 100%
+        ),
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, .20),
+            rgba(0, 15, 9, .65)
+        );
+}
+
+/* ==================================================
+   NAVBAR
+================================================== */
+
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 7%;
+
+    border-bottom: 1px solid rgba(255,255,255,.12);
+
+    background: rgba(3, 20, 13, .48);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.logo {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    color: #9be7a9;
+}
+
+.tagline {
+    color: #d5e8d9;
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-top: 5px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user {
+    font-size: 13px;
+    color: #e3f5e7;
+}
+
+.logout-btn {
+    padding: 11px 19px;
+    border: 1px solid #b7e8c2;
+    border-radius: 8px;
+
+    color: white;
+    background: rgba(255,255,255,.08);
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .3s;
+}
+
+.logout-btn:hover {
+    background: #b83232;
+    border-color: #b83232;
+    transform: translateY(-2px);
+}
+
+/* ==================================================
+   HERO SECTION
+================================================== */
+
+.hero {
+    max-width: 1000px;
+    margin: auto;
+    padding: 85px 25px 60px;
+    text-align: center;
+}
+
+.welcome {
+    display: inline-block;
+    padding: 10px 20px;
+
+    background: rgba(130,220,150,.12);
+    border: 1px solid rgba(180,240,190,.35);
+    border-radius: 30px;
+
+    color: #b8edc1;
+    font-size: 13px;
+    margin-bottom: 28px;
+
+    backdrop-filter: blur(8px);
+}
+
+.hero h1 {
+    font-size: clamp(38px, 6vw, 65px);
+    line-height: 1.15;
+    margin-bottom: 22px;
+
+    animation: appear 1.2s ease;
+}
+
+.hero h1 span {
+    color: #9be7a9;
+}
+
+.hero p {
+    max-width: 700px;
+    margin: auto;
+
+    color: #e0eee4;
+    line-height: 1.9;
+    font-size: 15px;
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================================================
+   FEATURE SECTION
+================================================== */
+
+.section {
+    max-width: 1100px;
+    margin: auto;
+    padding: 35px 25px 75px;
+}
+
+.section h2 {
+    text-align: center;
+    font-size: 30px;
+    margin-bottom: 15px;
+}
+
+.section-intro {
+    text-align: center;
+    color: #d3e4d7;
+    font-size: 14px;
+    line-height: 1.8;
+    max-width: 750px;
+    margin: 0 auto 35px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.feature {
+    padding: 28px 23px;
+
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.085);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    border-radius: 15px;
+    transition: all .35s ease;
+}
+
+/* CLICKABLE FEATURE CARD */
+
+.feature-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.feature:hover {
+    transform: translateY(-7px);
+    background: rgba(255,255,255,.15);
+    border-color: rgba(155,231,169,.55);
+
+    box-shadow: 0 12px 35px rgba(0,0,0,.22);
+}
+
+.feature-link:focus-visible {
+    outline: 2px solid #9be7a9;
+    outline-offset: 4px;
+}
+
+.feature .icon {
+    font-size: 30px;
+    margin-bottom: 15px;
+}
+
+.feature h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: #b5edc0;
+}
+
+.feature p {
+    color: #d7e7db;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+/* ==================================================
+   FOOTER
+================================================== */
+
+.footer {
+    text-align: center;
+    padding: 25px;
+
+    border-top: 1px solid rgba(255,255,255,.15);
+
+    background: rgba(0,0,0,.12);
+
+    color: #c7d9cb;
+    font-size: 12px;
+}
+
+/* ==================================================
+   RESPONSIVE DESIGN
+================================================== */
+
+@media(max-width: 750px) {
+
+    .navbar {
+        padding: 18px 5%;
+    }
+
+    .nav-right {
+        gap: 10px;
+    }
+
+    .user {
+        display: none;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        padding-top: 65px;
+    }
+
+    .section h2 {
+        font-size: 25px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .background-slide {
+        animation: none;
+    }
+
+    .background-slide:nth-child(1) {
+        opacity: 1;
+    }
+
+    .hero h1 {
+        animation: none;
+    }
+
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- BACKGROUND IMAGES -->
+
+<div class="background">
+    <div class="background-slide"></div>
+    <div class="background-slide"></div>
+    <div class="background-slide"></div>
+</div>
+
+<div class="overlay"></div>
+
+<!-- NAVIGATION BAR -->
+
+<nav class="navbar">
+
+    <div>
+        <div class="logo">ECO<span>GUARD</span></div>
+        <div class="tagline">FOREST MONITORING SYSTEM</div>
+    </div>
+
+    <div class="nav-right">
+
+        <div class="user">
+            Welcome, {{ session.get('full_name', session.get('username', 'User')) }}
+        </div>
+
+        <form method="POST" action="{{ url_for('logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="logout-btn">Logout ↗</button>
+        </form>
+
+    </div>
+
+</nav>
+
+<!-- HERO SECTION -->
+
+<section class="hero">
+
+    <div class="welcome">
+        ✓ Login Successful! Welcome to EcoGuard
+    </div>
+
+    <h1>
+        Welcome to <span>EcoGuard</span>
+    </h1>
+
+    <p>
+        Protecting Nature Through Technology.
+        EcoGuard is an environmental monitoring system designed to
+        analyze forest vegetation, monitor green coverage, identify
+        environmental risks and support sustainable environmental
+        protection using satellite data and machine learning.
+    </p>
+
+</section>
+
+<!-- FEATURE SECTION -->
+
+<section class="section">
+
+    <h2>What Does EcoGuard Do?</h2>
+
+    <p class="section-intro">
+        EcoGuard combines satellite-based environmental analysis
+        and intelligent risk prediction to help people understand
+        forest conditions and take informed environmental actions.
+    </p>
+
+    <div class="features">
+
+        <!-- 1. SATELLITE MONITORING -->
+
+        <a href="/satellite-monitoring" class="feature feature-link">
+
+            <div class="icon">🛰️</div>
+
+            <h3>Satellite-Based Monitoring</h3>
+
+            <p>
+                Uses satellite imagery to observe vegetation
+                conditions across selected geographical areas.
+                Click to explore satellite monitoring.
+            </p>
+
+        </a>
+
+        <!-- 2. GREEN COVERAGE -->
+
+        <div class="feature">
+            
+<!-- 2. GREEN COVERAGE -->
+
+<a href="{{ url_for('green_coverage') }}" class="feature feature-link">
+
+    <div class="icon">🌳</div>
+
+    <h3>Green Coverage Analysis</h3>
+
+    <p>
+        Estimates vegetation coverage using NDVI
+        and compares it with the project's green coverage target.
+        Click to explore green coverage analysis.
+    </p>
+
+</a>
+
+
+        </div>
+
+        <!-- 3. RISK PREDICTION -->
+
+        <div class="feature">
+
+            <div class="icon">🤖</div>
+
+            <h3>Environmental Risk Prediction</h3>
+
+            <p>
+                Applies machine learning and environmental indicators
+                to estimate potential vegetation-related risks.
+            </p>
+
+        </div>
+
+        <!-- 4. DEFORESTATION -->
+
+        <div class="feature">
+
+            <div class="icon">📊</div>
+
+            <h3>Deforestation Change Detection</h3>
+
+            <p>
+                Compares current and previous satellite observations
+                to identify possible vegetation changes.
+            </p>
+
+        </div>
+
+        <!-- 5. EMAIL ALERTS -->
+
+        <div class="feature">
+
+            <div class="icon">📧</div>
+
+            <h3>Email Risk Alerts</h3>
+
+            <p>
+                Sends email notifications when the analysis
+                identifies a configured environmental risk level.
+            </p>
+
+        </div>
+
+        <!-- 6. TREE PLANTATION -->
+
+        <div class="feature">
+
+            <div class="icon">🌱</div>
+
+            <h3>Tree Plantation Suggestions</h3>
+
+            <p>
+                Provides approximate tree plantation planning
+                suggestions based on estimated green coverage gaps.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- FOOTER -->
+
+<footer class="footer">
+    © 2026 EcoGuard | Forest Monitoring & Environmental Risk Analysis System
+</footer>
+
+</body>
+</html>

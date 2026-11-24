@@ -1,0 +1,528 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoGuard | Analysis Result</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7f4;font-family:Inter,sans-serif;color:#26382e}
+header{background:#145638;color:white;padding:20px 5%;display:flex;justify-content:space-between;align-items:center}
+header a{color:white;text-decoration:none;font-size:13px}
+main{max-width:1150px;margin:28px auto;padding:0 20px}
+.hero{background:linear-gradient(120deg,#124b32,#278653);color:white;padding:27px;border-radius:17px;margin-bottom:20px}
+.hero h1{margin:0 0 10px;font-size:25px}
+.hero p{line-height:1.7;color:#e4f4e9;font-size:13px}
+.risk{display:inline-block;padding:8px 15px;border-radius:30px;background:white;color:#176b45;font-weight:800;font-size:12px}
+.risk.HIGH{color:#c83232}
+.risk.MEDIUM{color:#b77d0c}
+.risk.LOW{color:#16834e}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.card{background:white;border-radius:14px;padding:20px;box-shadow:0 5px 20px #163e2b0a;transition:.25s}
+.card:hover{transform:translateY(-4px)}
+.icon{width:42px;height:42px;border-radius:12px;background:#eaf5ee;color:#176b45;display:grid;place-items:center;font-size:18px;margin-bottom:13px}
+.card h3{margin:0 0 8px;font-size:23px}
+.card p{font-size:12px;color:#738078;line-height:1.7;margin:0}
+.section{background:white;padding:23px;border-radius:14px;margin-bottom:20px;box-shadow:0 5px 20px #163e2b0a}
+.section h2{font-size:18px;margin:0 0 17px}
+.explanation{background:#f0f7f2;padding:14px;border-radius:10px;font-size:13px;line-height:1.8;margin-top:12px}
+.progress{height:14px;background:#e5eee8;border-radius:30px;overflow:hidden;margin:15px 0}
+.progress-bar{height:100%;width:0;background:linear-gradient(90deg,#1d774c,#7acb88);border-radius:30px;transition:width 1.4s ease}
+.coverage-row{display:flex;justify-content:space-between;font-size:13px;gap:12px;flex-wrap:wrap}
+.tree-box{background:#eaf5ee;border-radius:13px;padding:22px;display:flex;align-items:center;gap:20px}
+.tree-box i{font-size:42px;color:#176b45}
+.tree-number{font-size:30px;font-weight:800;color:#176b45}
+.warning{font-size:12px;color:#69776e;line-height:1.8;margin-top:14px}
+.chart-wrap{max-width:700px;height:280px;margin:auto}
+.btn{display:inline-block;background:#176b45;color:white;padding:12px 18px;border-radius:9px;text-decoration:none;font-size:13px;margin-top:10px}
+.history-note{background:#fff8e9;border-left:4px solid #d6a23a;padding:13px 15px;border-radius:8px;font-size:12px;line-height:1.8;color:#6c5830;margin-top:15px}
+.history-period{font-size:12px;color:#718078;margin-top:-8px;margin-bottom:18px}
+@media(max-width:750px){
+    .grid{grid-template-columns:1fr 1fr}
+    .tree-box{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:500px){
+    .grid{grid-template-columns:1fr}
+    main{padding:0 13px}
+    .section{padding:17px}
+    .hero h1{font-size:20px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <strong><i class="fa-solid fa-leaf"></i> EcoGuard Analysis</strong>
+    <a href="{{ url_for('dashboard') }}">
+        <i class="fa-solid fa-arrow-left"></i> Dashboard
+    </a>
+</header>
+
+<main>
+
+    <!-- LOCATION AND RISK -->
+    <section class="hero">
+        <h1><i class="fa-solid fa-location-dot"></i> {{ location.name }}</h1>
+        <p>
+            Satellite-based environmental analysis report.
+            The current observation period is compared with the previous 60-day period.
+        </p>
+        <span class="risk {{ risk }}">{{ risk }} RISK</span>
+    </section>
+
+    <!-- MAIN ENVIRONMENTAL INDICATORS -->
+    <section class="grid">
+
+        <div class="card">
+            <div class="icon"><i class="fa-solid fa-leaf"></i></div>
+            <h3>{{ '%.3f'|format(stats.current_ndvi) if stats.current_ndvi is not none else 'N/A' }}</h3>
+            <p>
+                <strong>Current NDVI</strong><br>
+                NDVI হলো satellite image থেকে গাছপালা ও উদ্ভিদের সবুজ অবস্থা বোঝার একটি সূচক।
+                সাধারণভাবে বেশি positive মান বেশি সবুজ উদ্ভিদের ইঙ্গিত দিতে পারে।
+            </p>
+            <div class="explanation">{{ explanations.ndvi }}</div>
+        </div>
+
+        <div class="card">
+            <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
+            <h3>{{ '%.2f'|format(stats.vegetation_loss) ~ '%' if stats.vegetation_loss is not none else 'N/A' }}</h3>
+            <p>
+                <strong>Estimated Vegetation Loss</strong><br>
+                আগের ৬০ দিনের তুলনায় বর্তমান সময়ে vegetation area কতটা কমেছে তার আনুমানিক হিসাব।
+            </p>
+            <div class="explanation">{{ explanations.loss }}</div>
+        </div>
+
+        <div class="card">
+            <div class="icon"><i class="fa-solid fa-cloud-rain"></i></div>
+            <h3>{{ '%.1f mm'|format(stats.rainfall) if stats.rainfall is not none else 'N/A' }}</h3>
+            <p>
+                <strong>Rainfall</strong><br>
+                CHIRPS rainfall dataset থেকে নির্বাচিত সময়ের আনুমানিক মোট বৃষ্টিপাত।
+            </p>
+            <div class="explanation">{{ explanations.rainfall }}</div>
+        </div>
+
+    </section>
+
+    <!-- GREEN COVERAGE -->
+    <section class="section">
+        <h2><i class="fa-solid fa-chart-pie"></i> Green Coverage Analysis</h2>
+
+        {% if stats.current_coverage_percent is not none %}
+
+        <div class="coverage-row">
+            <strong>Current Green Coverage</strong>
+            <strong>{{ '%.2f'|format(stats.current_coverage_percent) }}%</strong>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="coverageBar"
+                 data-width="{{ [stats.current_coverage_percent, 100]|min }}">
+            </div>
+        </div>
+
+        <div class="coverage-row">
+            <span>EcoGuard Project Target: {{ green_target|int }}%</span>
+            <span>
+                Target gap:
+                {{ '%.2f'|format(coverage_gap) if coverage_gap is not none else 'N/A' }}
+                percentage points
+            </span>
+        </div>
+
+        <div class="explanation">
+            <strong><i class="fa-solid fa-circle-info"></i> সহজ ব্যাখ্যা:</strong>
+            {{ explanations.coverage }}
+        </div>
+
+        {% else %}
+        <p>Satellite data অপর্যাপ্ত হওয়ায় green coverage হিসাব করা যায়নি।</p>
+        {% endif %}
+
+        <p class="warning">
+            গুরুত্বপূর্ণ: ৬০% হলো EcoGuard-এর project benchmark, কোনো সর্বজনীন ecological standard নয়।
+            NDVI 0.30-এর বেশি থাকা area-কে এখানে vegetation proxy হিসেবে গণনা করা হয়েছে।
+            এটি সরাসরি tree cover বা forest cover-এর পরিমাপ নয়।
+        </p>
+    </section>
+
+    <!-- HISTORICAL FOREST LOSS -->
+    <section class="section">
+
+        <h2>
+            <i class="fa-solid fa-tree"></i>
+            Historical Forest Loss Analysis
+        </h2>
+
+        <p class="history-period">
+            Long-term forest-cover change monitoring | 2001–2025
+        </p>
+
+        {% set history = stats.historical_forest_loss %}
+
+        {% if history %}
+
+        <div class="grid">
+
+            <div class="card">
+                <div class="icon">
+                    <i class="fa-solid fa-tree"></i>
+                </div>
+                <h3>
+                    {{ '%.2f'|format(history.baseline_forest_area_hectares) }}
+                </h3>
+                <p>
+                    <strong>Baseline Forest Area (ha)</strong><br>
+                    2000 সালের estimated baseline forest area।
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <h3>
+                    {{ '%.2f'|format(history.total_forest_loss_hectares) }}
+                </h3>
+                <p>
+                    <strong>Total Historical Forest Loss (ha)</strong><br>
+                    2001–2025 সময়ে dataset-এ শনাক্ত হওয়া মোট tree-cover loss।
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="icon">
+                    <i class="fa-solid fa-percent"></i>
+                </div>
+                <h3>
+                    {{ '%.2f%%'|format(history.historical_loss_percent) if history.historical_loss_percent is not none else 'N/A' }}
+                </h3>
+                <p>
+                    <strong>Historical Loss Percentage</strong><br>
+                    Baseline forest area-এর তুলনায় শনাক্ত হওয়া loss-এর হার।
+                </p>
+            </div>
+
+        </div>
+
+        <div class="explanation">
+            <strong>
+                <i class="fa-solid fa-circle-info"></i>
+                Historical Forest Analysis:
+            </strong>
+            {{ explanations.historical_loss if explanations.historical_loss is defined else history.interpretation }}
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+            <div class="icon">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+
+            <h3>
+                {{ '%.2f'|format(history.recent_5_year_loss_hectares) }} ha
+            </h3>
+
+            <p>
+                <strong>Recent Forest Loss (2021–2025)</strong><br>
+                সর্বশেষ পাঁচ বছরের মোট শনাক্ত হওয়া tree-cover loss।
+            </p>
+        </div>
+
+        <!-- YEAR-WISE CHART -->
+        <h3 style="font-size:15px;margin:25px 0 15px;">
+            <i class="fa-solid fa-chart-column"></i>
+            Year-wise Forest Loss
+        </h3>
+
+        <div class="chart-wrap">
+            <canvas id="forestLossChart"></canvas>
+        </div>
+
+        <div class="history-note">
+            <strong>Dataset information:</strong><br>
+            Dataset: {{ history.dataset }}<br>
+            Dataset period: {{ history.dataset_start_year }}–{{ history.dataset_end_year }}<br>
+            Baseline canopy threshold: {{ history.canopy_threshold_percent }}%
+
+            <br><br>
+
+            এই ফলাফল Hansen Global Forest Change dataset-এর gross tree-cover loss নির্দেশ করে।
+            প্রতিটি detected loss স্থায়ী deforestation বোঝায় না।
+            ঝড়, আগুন, harvesting বা অন্য কারণেও tree-cover loss শনাক্ত হতে পারে।
+            ফলাফল নির্বাচিত location boundary এবং dataset-এর data quality-এর ওপর নির্ভরশীল।
+        </div>
+
+        {% else %}
+
+        <p>
+            <i class="fa-solid fa-circle-exclamation"></i>
+            এই location-এর জন্য historical forest-loss data পাওয়া যায়নি।
+        </p>
+
+        {% endif %}
+
+    </section>
+
+    <!-- TREE REQUIREMENT -->
+    <section class="section">
+        <h2><i class="fa-solid fa-tree"></i> Estimated Minimum Trees Required</h2>
+
+        {% if trees_needed is not none %}
+
+        <div class="tree-box">
+            <i class="fa-solid fa-seedling"></i>
+            <div>
+                <div class="tree-number" id="treeCounter"
+                     data-value="{{ trees_needed }}">0</div>
+                <strong>Estimated trees for the target gap</strong>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <strong>কীভাবে হিসাব করা হয়েছে?</strong><br>
+            ১. এলাকার মোট আয়তন থেকে বর্তমান vegetation coverage হিসাব করা হয়েছে।<br>
+            ২. ৬০% target থেকে বর্তমান coverage বাদ দিয়ে gap বের করা হয়েছে।<br>
+            ৩. প্রতি হেক্টরে {{ trees_per_hectare }}টি গাছের planning density ধরে আনুমানিক সংখ্যা হিসাব করা হয়েছে।
+        </div>
+
+        <p class="warning">
+            এটি একটি theoretical planning estimate, বাস্তব planting order নয়।
+            সব জমি গাছ লাগানোর উপযোগী নয়। নদী, জলাভূমি, প্রাকৃতিক ঘাসভূমি,
+            বসতি বা সংরক্ষিত ecosystem-এ নির্বিচারে গাছ লাগানো উচিত নয়।
+            স্থানীয় মাটি, জলবায়ু, native species, গাছের দূরত্ব এবং জমির উপযোগিতা
+            যাচাই করে প্রকৃত planting plan তৈরি করতে হবে।
+        </p>
+
+        {% else %}
+        <p>পর্যাপ্ত satellite data পাওয়া যায়নি, তাই গাছের সংখ্যা হিসাব করা সম্ভব হয়নি।</p>
+        {% endif %}
+    </section>
+
+    <!-- NDVI CHART -->
+    <section class="section">
+        <h2><i class="fa-solid fa-chart-column"></i> Current vs Previous NDVI</h2>
+
+        <div class="chart-wrap">
+            <canvas id="ndviChart"></canvas>
+        </div>
+
+        <div class="explanation">
+            এই chart-এ বর্তমান এবং আগের ৬০ দিনের গড় NDVI তুলনা করা হয়েছে।
+            বর্তমান মান আগের চেয়ে কম হলে vegetation condition কমে যাওয়ার সম্ভাবনা থাকতে পারে।
+        </div>
+    </section>
+
+    <!-- IMAGE COUNTS AND RISK -->
+    <section class="grid">
+
+        <div class="card">
+            <div class="icon"><i class="fa-solid fa-satellite"></i></div>
+            <h3>{{ stats.current_image_count }}</h3>
+            <p>
+                <strong>Current Satellite Images</strong><br>
+                বর্তমান সময়ের বিশ্লেষণে ব্যবহৃত image সংখ্যা।
+                বেশি image থাকলে পর্যবেক্ষণের data coverage ভালো হতে পারে।
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <h3>{{ stats.previous_image_count }}</h3>
+            <p>
+                <strong>Previous Satellite Images</strong><br>
+                আগের সময়ের তুলনার জন্য ব্যবহৃত image সংখ্যা।
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>{{ risk }}</h3>
+            <p>
+                <strong>Environmental Risk</strong><br>
+                {{ explanations.risk }}
+            </p>
+        </div>
+
+    </section>
+
+    <!-- ANALYSIS PERIOD -->
+    <section class="section">
+        <h2><i class="fa-solid fa-calendar-days"></i> Analysis Period</h2>
+
+        <p style="font-size:13px;line-height:1.9">
+            <strong>Current:</strong>
+            {{ stats.analysis_start }} to {{ stats.analysis_end }}<br>
+
+            <strong>Previous:</strong>
+            {{ stats.previous_start }} to {{ stats.previous_end }}<br>
+
+            <strong>Location coordinates:</strong>
+            {{ location.latitude }}, {{ location.longitude }}
+        </p>
+    </section>
+
+    <a class="btn" href="{{ url_for('dashboard') }}">
+        <i class="fa-solid fa-house"></i> Back to Dashboard
+    </a>
+
+</main>
+
+<script>
+
+// Animate green coverage progress bar and tree counter
+window.addEventListener("load", () => {
+
+    const bar = document.getElementById("coverageBar");
+
+    if (bar) {
+        setTimeout(() => {
+            bar.style.width = bar.dataset.width + "%";
+        }, 250);
+    }
+
+    const treeCounter = document.getElementById("treeCounter");
+
+    if (treeCounter) {
+        const target = Number(treeCounter.dataset.value);
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 80));
+
+        const timer = setInterval(() => {
+            current += step;
+
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+
+            treeCounter.textContent = current.toLocaleString();
+
+        }, 20);
+    }
+
+});
+
+// Current vs Previous NDVI Chart
+const currentNdvi = {{ stats.current_ndvi|tojson }};
+const previousNdvi = {{ stats.previous_ndvi|tojson }};
+
+const ndviCanvas = document.getElementById("ndviChart");
+
+if (ndviCanvas) {
+
+    new Chart(ndviCanvas, {
+        type: "bar",
+
+        data: {
+            labels: ["Previous 60 Days", "Current 60 Days"],
+
+            datasets: [{
+                label: "Average NDVI",
+
+                data: [
+                    previousNdvi === null ? 0 : previousNdvi,
+                    currentNdvi === null ? 0 : currentNdvi
+                ],
+
+                borderWidth: 1,
+                borderRadius: 8
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 1
+                }
+            }
+        }
+    });
+
+}
+
+
+// Historical Forest Loss Chart
+{% if stats.historical_forest_loss and stats.annual_forest_loss %}
+
+const forestYears = {{ stats.annual_forest_loss | map(attribute='year') | list | tojson }};
+
+const forestLossValues = {{ stats.annual_forest_loss | map(attribute='loss_area_hectares') | list | tojson }};
+
+const forestLossCanvas = document.getElementById("forestLossChart");
+
+if (forestLossCanvas) {
+
+    new Chart(forestLossCanvas, {
+
+        type: "bar",
+
+        data: {
+            labels: forestYears,
+
+            datasets: [{
+                label: "Forest Cover Loss (hectares)",
+                data: forestLossValues,
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    display: true
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(2) + " hectares";
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Forest Loss (hectares)"
+                    }
+                },
+
+                x: {
+                    title: {
+                        display: true,
+                        text: "Year"
+                    }
+                }
+            }
+        }
+
+    });
+
+}
+
+{% endif %}
+
+</script>
+
+</body>
+</html>

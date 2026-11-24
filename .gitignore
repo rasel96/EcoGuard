@@ -1,0 +1,16 @@
+venv/
+.venv/
+.env
+*.db
+*.sqlite
+*.sqlite3
+EcoGuard/instance/
+EcoGuard/.env
+frontend/.env.local
+frontend/node_modules/
+frontend/.next/
+*.tsbuildinfo
+__pycache__/
+*.pyc
+.pytest_cache/
+*service-account*.json

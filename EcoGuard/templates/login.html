@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoGuard | Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    background: linear-gradient(120deg, #071d16, #123c2b, #071d16);
+    background-size: 300% 300%;
+    animation: backgroundMove 14s ease infinite;
+}
+
+@keyframes backgroundMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    width: 100%;
+    max-width: 1050px;
+    min-height: 620px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: white;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 25px 70px rgba(0,0,0,.35);
+}
+
+.left {
+    background:
+        linear-gradient(rgba(4,35,23,.55), rgba(4,35,23,.82)),
+        url("https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200");
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 55px 45px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    color: #9be7a9;
+}
+
+.left-content h1 {
+    font-size: 39px;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.left-content p {
+    line-height: 1.8;
+    color: #e0eee4;
+    font-size: 14px;
+}
+
+.left-bottom {
+    font-size: 12px;
+    color: #c9ddce;
+}
+
+.right {
+    padding: 55px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.right h2 {
+    color: #163c29;
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #777;
+    font-size: 13px;
+    margin-bottom: 30px;
+}
+
+.flash {
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.success { background: #e3f7e9; color: #176b34; }
+.danger { background: #ffe6e6; color: #a32121; }
+.warning { background: #fff3d8; color: #805500; }
+.info { background: #e5f2ff; color: #14558a; }
+
+label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #344b3b;
+    margin: 17px 0 8px;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #d8e2da;
+    border-radius: 9px;
+    outline: none;
+    font-size: 14px;
+    transition: .2s;
+}
+
+input:focus {
+    border-color: #27864e;
+    box-shadow: 0 0 0 3px rgba(39,134,78,.1);
+}
+
+.password-box {
+    position: relative;
+}
+
+.password-box input {
+    padding-right: 65px;
+}
+
+.show-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    color: #267447;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.remember {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 17px 0 24px;
+    font-size: 12px;
+}
+
+.remember label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 400;
+}
+
+a {
+    color: #247b46;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 15px;
+    background: #1d7541;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.login-btn:hover {
+    background: #125c31;
+    transform: translateY(-2px);
+}
+
+.signup {
+    text-align: center;
+    font-size: 13px;
+    margin-top: 25px;
+    color: #777;
+}
+
+@media(max-width: 750px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+    .left {
+        min-height: 260px;
+        padding: 30px;
+    }
+    .left-content h1 {
+        font-size: 28px;
+    }
+    .right {
+        padding: 35px 25px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="left">
+        <div class="logo">ECO<span>GUARD</span></div>
+
+        <div class="left-content">
+            <h1>Protecting Nature Through Technology</h1>
+            <p>
+                Monitor forests, analyze vegetation, detect environmental
+                risks and support a greener future with EcoGuard.
+            </p>
+        </div>
+
+        <div class="left-bottom">
+            Forest Monitoring & Environmental Risk Analysis System
+        </div>
+    </div>
+
+    <div class="right">
+
+        <h2>Welcome Back!</h2>
+        <p class="subtitle">Sign in to continue to your EcoGuard dashboard.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label>Email or Username</label>
+            <input
+                type="text"
+                name="email_or_username"
+                placeholder="Enter your email or username"
+                required
+                autocomplete="username"
+            >
+
+            <label>Password</label>
+            <div class="password-box">
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password"
+                >
+                <button type="button" class="show-btn" onclick="togglePassword()">Show</button>
+            </div>
+
+            <div class="remember">
+                <label>
+                    <input type="checkbox" name="remember">
+                    Remember me
+                </label>
+
+                <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="login-btn">Sign In</button>
+
+        </form>
+
+        <div class="signup">
+            Don't have an account?
+            <a href="{{ url_for('signup') }}">Create Account</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function togglePassword() {
+    const password = document.getElementById("password");
+    const button = document.querySelector(".show-btn");
+
+    if (password.type === "password") {
+        password.type = "text";
+        button.innerText = "Hide";
+    } else {
+        password.type = "password";
+        button.innerText = "Show";
+    }
+}
+</script>
+
+</body>
+</html>

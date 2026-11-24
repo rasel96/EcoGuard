@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+:root {
+  --bg-canvas: #0a0e0c;
+  --bg-surface: #111714;
+  --bg-elevated: #17201b;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --accent-emerald: #10b981;
+  --accent-emerald-muted: #059669;
+  --text-primary: #f4f7f5;
+  --text-secondary: #98a89f;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+html,
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Leaflet overrides for dark geospatial UI */
+.leaflet-container {
+  background: #0d1411;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.leaflet-control-attribution {
+  background: rgba(10, 14, 12, 0.78) !important;
+  color: #98a89f !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #6ee7b7 !important;
+}

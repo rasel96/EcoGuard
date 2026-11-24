@@ -1,0 +1,16 @@
+Flask
+Flask-SQLAlchemy
+Flask-WTF
+Flask-Cors
+Werkzeug
+python-dotenv
+gunicorn
+psycopg[binary]
+earthengine-api
+geopy
+joblib
+scikit-learn
+numpy
+pandas
+openai
+pytest

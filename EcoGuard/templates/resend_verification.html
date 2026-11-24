@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoGuard | Verify Email</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(120deg, #071d16, #174b31, #071d16);
+    background-size: 300% 300%;
+    animation: move 14s ease infinite;
+}
+
+@keyframes move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    width: 100%;
+    max-width: 460px;
+    background: white;
+    padding: 42px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+
+.logo {
+    text-align: center;
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #174b31;
+    margin-bottom: 28px;
+}
+
+.logo span {
+    color: #38a35e;
+}
+
+.icon {
+    text-align: center;
+    font-size: 45px;
+    margin-bottom: 15px;
+}
+
+h2 {
+    text-align: center;
+    color: #183e2b;
+    margin-bottom: 12px;
+}
+
+.description {
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 25px;
+}
+
+.flash {
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.success { background: #e3f7e9; color: #176b34; }
+.danger { background: #ffe6e6; color: #a32121; }
+.warning { background: #fff3d8; color: #805500; }
+.info { background: #e5f2ff; color: #14558a; }
+
+label {
+    display: block;
+    color: #344b3b;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #d8e2da;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+}
+
+input:focus {
+    border-color: #27864e;
+    box-shadow: 0 0 0 3px rgba(39,134,78,.1);
+}
+
+button {
+    width: 100%;
+    margin-top: 22px;
+    padding: 14px;
+    background: #1d7541;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #125c31;
+}
+
+.back {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 13px;
+}
+
+a {
+    color: #247b46;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">ECO<span>GUARD</span></div>
+
+    <div class="icon">📩</div>
+
+    <h2>Verify Your Email</h2>
+
+    <p class="description">
+        Didn't receive your verification email?
+        Enter your registered email address below.
+        We will send you a new verification link.
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('resend_verification') }}">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label>Email Address</label>
+
+        <input
+            type="email"
+            name="email"
+            placeholder="Enter your registered email"
+            required
+            autocomplete="email"
+        >
+
+        <button type="submit">Resend Verification Email</button>
+
+    </form>
+
+    <div class="back">
+        <a href="{{ url_for('login') }}">← Back to Login</a>
+    </div>
+
+</div>
+
+</body>
+</html>
