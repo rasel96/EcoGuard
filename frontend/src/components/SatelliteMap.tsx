@@ -11,9 +11,17 @@ import {
 } from "@phosphor-icons/react";
 import type { GeoJsonPolygon } from "@/lib/types";
 
+interface FocusLocation {
+  name: string;
+  latitude: number;
+  longitude: number;
+  boundingbox?: number[] | null;
+}
+
 interface SatelliteMapProps {
   center?: [number, number];
   boundingBox?: number[] | null;
+  focusLocation?: FocusLocation | null;
   ndviTileUrl?: string | null;
   landcoverTileUrl?: string | null;
   hansenTileUrl?: string | null;
@@ -24,9 +32,18 @@ interface SatelliteMapProps {
 type OverlayMode = "none" | "ndvi" | "landcover" | "hansen";
 type BaseMapMode = "satellite" | "dark";
 
+function escapeHtml(raw: string): string {
+  return raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export default function SatelliteMap({
   center = [23.685, 90.356],
   boundingBox,
+  focusLocation,
   ndviTileUrl,
   landcoverTileUrl,
   hansenTileUrl,
@@ -38,6 +55,7 @@ export default function SatelliteMap({
   const baseLayerRef = useRef<L.TileLayer | null>(null);
   const overlayLayerRef = useRef<L.TileLayer | null>(null);
   const aoiLayerRef = useRef<L.LayerGroup | null>(null);
+  const pointerLayerRef = useRef<L.LayerGroup | null>(null);
   const drawLayerRef = useRef<L.LayerGroup | null>(null);
 
   const [baseMap, setBaseMap] = useState<BaseMapMode>("satellite");
@@ -60,6 +78,7 @@ export default function SatelliteMap({
     });
 
     aoiLayerRef.current = L.layerGroup().addTo(map);
+    pointerLayerRef.current = L.layerGroup().addTo(map);
     drawLayerRef.current = L.layerGroup().addTo(map);
 
     map.on("click", (e: L.LeafletMouseEvent) => {
@@ -160,6 +179,59 @@ export default function SatelliteMap({
       map.fitBounds(bounds, { padding: [36, 36] });
     }
   }, [activePolygon, boundingBox]);
+
+  // Render animated white pointer arrow on exact searched / analyzed location
+  useEffect(() => {
+    const map = mapRef.current;
+    const ptrLayer = pointerLayerRef.current;
+    if (!map || !ptrLayer) return;
+
+    ptrLayer.clearLayers();
+    if (!focusLocation) return;
+
+    const { latitude, longitude, name, boundingbox } = focusLocation;
+    if (typeof latitude !== "number" || typeof longitude !== "number") return;
+
+    const shortLabel = escapeHtml(name.split(",")[0].trim() || name);
+    const pointerIcon = L.divIcon({
+      className: "",
+      iconSize: [220, 74],
+      iconAnchor: [110, 68],
+      html: `
+        <div class="ecoguard-pointer-wrap">
+          <div class="ecoguard-pointer-label">${shortLabel}</div>
+          <svg class="ecoguard-pointer-arrow" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3V19M12 19L5.5 12.5M12 19L18.5 12.5" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="ecoguard-pointer-target">
+            <span class="ecoguard-pointer-ring"></span>
+            <span class="ecoguard-pointer-dot"></span>
+          </div>
+        </div>
+      `,
+    });
+
+    L.marker([latitude, longitude], {
+      icon: pointerIcon,
+      interactive: false,
+      zIndexOffset: 900,
+    }).addTo(ptrLayer);
+
+    if (!activePolygon) {
+      if (boundingbox && boundingbox.length === 4) {
+        const [south, north, west, east] = boundingbox;
+        map.fitBounds(
+          [
+            [south, west],
+            [north, east],
+          ],
+          { padding: [44, 44], maxZoom: 13 }
+        );
+      } else {
+        map.flyTo([latitude, longitude], 11, { duration: 0.9 });
+      }
+    }
+  }, [focusLocation, activePolygon]);
 
   // Render draft polygon points while user is clicking
   useEffect(() => {

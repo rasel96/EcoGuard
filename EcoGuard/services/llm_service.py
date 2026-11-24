@@ -10,6 +10,7 @@ Models:
 import json
 import logging
 import os
+import re
 
 logger = logging.getLogger("ecoguard.llm")
 
@@ -21,6 +22,17 @@ ALLOWED_MODELS = (
     DEFAULT_PRIMARY_MODEL,
     DEFAULT_FALLBACK_MODEL,
 )
+
+# Guard against occasional CJK character leakage in multilingual outputs
+_CJK_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+")
+
+
+def _sanitize_output(text, lang="en"):
+    if not text:
+        return ""
+    cleaned = _CJK_RE.sub("", text)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    return cleaned.strip()
 
 
 def get_llm_config():
@@ -74,7 +86,7 @@ def _resolve_model_chain(requested_model=None):
     return chain
 
 
-def _call_openai_compatible(messages, requested_model=None, temperature=0.3, max_tokens=700):
+def _call_openai_compatible(messages, requested_model=None, temperature=0.2, max_tokens=850):
     """
     Call the OpenAI-compatible DeepSeek endpoint with automatic failover
     from primary model to fallback (:free) model.
@@ -167,7 +179,73 @@ def _compact_context(location_name, analysis, risk_result=None, tree_data=None):
     }
 
 
-def _deterministic_briefing(location_name, analysis, risk_result, tree_data, language="en"):
+def _parse_structured_briefing(raw_text, lang="en"):
+    """Extract JSON briefing if the LLM returned valid structured JSON."""
+    if not raw_text:
+        return None
+    cleaned = _sanitize_output(raw_text, lang=lang)
+    # Strip optional ```json ... ``` fences
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned, re.DOTALL)
+    candidate = fenced.group(1) if fenced else cleaned
+    start = candidate.find("{")
+    end = candidate.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        return None
+    try:
+        parsed = json.loads(candidate[start : end + 1])
+    except Exception:
+        return None
+    if not isinstance(parsed, dict) or not parsed.get("summary"):
+        return None
+
+    headline = _sanitize_output(str(parsed.get("headline") or ""), lang)
+    summary = _sanitize_output(str(parsed.get("summary") or ""), lang)
+    signals = [
+        _sanitize_output(str(s), lang)
+        for s in (parsed.get("key_signals") or [])
+        if str(s).strip()
+    ][:5]
+    actions = [
+        _sanitize_output(str(a), lang)
+        for a in (parsed.get("recommended_actions") or [])
+        if str(a).strip()
+    ][:4]
+    caveat = _sanitize_output(str(parsed.get("data_caveat") or ""), lang)
+
+    return {
+        "headline": headline,
+        "summary": summary,
+        "key_signals": signals,
+        "recommended_actions": actions,
+        "data_caveat": caveat,
+    }
+
+
+def _structured_to_plain_text(structured, lang="en"):
+    parts = []
+    if structured.get("headline"):
+        parts.append(structured["headline"])
+        parts.append("")
+    if structured.get("summary"):
+        parts.append(structured["summary"])
+        parts.append("")
+    if structured.get("key_signals"):
+        parts.append("মূল সংকেতসমূহ:" if lang == "bn" else "Key Signals:")
+        for sig in structured["key_signals"]:
+            parts.append(f"- {sig}")
+        parts.append("")
+    if structured.get("recommended_actions"):
+        parts.append("প্রস্তাবিত পদক্ষেপ:" if lang == "bn" else "Recommended Actions:")
+        for idx, act in enumerate(structured["recommended_actions"], start=1):
+            parts.append(f"{idx}. {act}")
+        parts.append("")
+    if structured.get("data_caveat"):
+        prefix = "ডেটা নোট: " if lang == "bn" else "Data Note: "
+        parts.append(f"{prefix}{structured['data_caveat']}")
+    return "\n".join(parts).strip()
+
+
+def _deterministic_structured_briefing(location_name, analysis, risk_result, tree_data, language="en"):
     analysis = analysis or {}
     risk_result = risk_result or {}
     tree_data = tree_data or {}
@@ -189,39 +267,55 @@ def _deterministic_briefing(location_name, analysis, risk_result, tree_data, lan
     rain_txt = f"{rainfall:.1f} mm" if isinstance(rainfall, (int, float)) else "N/A"
     recent_txt = f"{recent_5yr:,.2f} ha" if isinstance(recent_5yr, (int, float)) else "N/A"
     trees_txt = f"{trees:,}" if isinstance(trees, int) else "N/A"
-    conf_txt = f" ({confidence:.0f}% confidence)" if isinstance(confidence, (int, float)) else ""
+    conf_txt = f" ({confidence:.0f}%)" if isinstance(confidence, (int, float)) else ""
 
     if language == "bn":
-        return (
-            f"অবস্থান: {location_name}\n"
-            f"ঝুঁকির মাত্রা: {risk_level}{conf_txt}\n\n"
-            f"সারসংক্ষেপ:\n"
-            f"- বর্তমান NDVI সূচক {ndvi_txt} এবং আনুমানিক সবুজ আচ্ছাদন {cov_txt}।\n"
-            f"- পূর্ববর্তী ৬০ দিনের তুলনায় উদ্ভিদ এলাকা পরিবর্তনের হার {loss_txt} এবং বৃষ্টিপাত {rain_txt}।\n"
-            f"- ২০২১–২০২৫ সময়ে Hansen স্যাটেলাইট ডেটা অনুযায়ী মোট বনক্ষয় {recent_txt}।\n\n"
-            f"প্রস্তাবিত পদক্ষেপ:\n"
-            f"1. স্যাটেলাইটে কম NDVI যুক্ত অংশে মাঠপর্যায়ের যাচাই পরিচালনা করুন।\n"
-            f"2. লক্ষ্য সবুজ আচ্ছাদন পূরণে স্থানীয় প্রজাতির আনুমানিক {trees_txt}টি চারা রোপণের পরিকল্পনা করুন (জলাভূমি ও কৃষি জমি বাদে)।\n"
-            f"3. ৩০ দিন পর পুনরায় Sentinel-2 পর্যবেক্ষণ চালিয়ে পরিবর্তন নিশ্চিত করুন।"
-        )
+        return {
+            "headline": f"{location_name} — ঝুঁকির মাত্রা: {risk_level}{conf_txt}",
+            "summary": (
+                f"বর্তমান স্যাটেলাইট পর্যবেক্ষণে গড় NDVI {ndvi_txt} এবং আনুমানিক সবুজ আচ্ছাদন {cov_txt} রেকর্ড হয়েছে। "
+                f"স্বল্পমেয়াদি উদ্ভিদ পরিবর্তনের হার {loss_txt} এবং বৃষ্টিপাত {rain_txt}।"
+            ),
+            "key_signals": [
+                f"বর্তমান Sentinel-2 গড় NDVI: {ndvi_txt} (সবুজ আচ্ছাদন {cov_txt})",
+                f"৬০-দিনের উদ্ভিদ এলাকা হ্রাস: {loss_txt}",
+                f"CHIRPS বৃষ্টিপাত: {rain_txt}",
+                f"২০২১-২০২৫ Hansen বনক্ষয়: {recent_txt}",
+            ],
+            "recommended_actions": [
+                "কম NDVI যুক্ত অংশে মাঠপর্যায়ের যাচাই পরিচালনা করুন।",
+                f"উপযুক্ত অ-কৃষি ও অ-জলাভূমি এলাকায় স্থানীয় প্রজাতির আনুমানিক {trees_txt}টি চারা রোপণের পরিকল্পনা করুন।",
+                "৩০ দিন পর পুনরায় Sentinel-2 পর্যবেক্ষণ চালিয়ে পরিবর্তন নিশ্চিত করুন।",
+            ],
+            "data_caveat": "স্যাটেলাইট সূচক সিদ্ধান্ত-সহায়ক তথ্য প্রদান করে; চূড়ান্ত নিশ্চিতকরণের জন্য মাঠ যাচাই প্রয়োজন।",
+        }
 
-    yoy_note = ""
-    if isinstance(yoy_delta, (int, float)):
-        direction = "above" if yoy_delta >= 0 else "below"
-        yoy_note = f" Year-over-year NDVI is {abs(yoy_delta):.3f} {direction} the same seasonal window last year."
-
-    return (
-        f"Executive Briefing — {location_name}\n"
-        f"Risk Classification: {risk_level}{conf_txt}\n\n"
-        f"Key Findings:\n"
-        f"- Current Sentinel-2 mean NDVI is {ndvi_txt} with estimated green coverage of {cov_txt}.{yoy_note}\n"
-        f"- Short-term 60-day vegetation loss is estimated at {loss_txt} alongside {rain_txt} recorded rainfall.\n"
-        f"- Historical Hansen GFC data shows {recent_txt} of gross forest-cover loss during 2021–2025.\n\n"
-        f"Recommended Actions:\n"
-        f"1. Prioritize ground verification in low-NDVI and recent-loss sub-zones before declaring permanent clearing.\n"
-        f"2. Plan phased native-species restoration (indicative gap estimate: {trees_txt} trees) strictly on non-wetland, non-agricultural suitable land.\n"
-        f"3. Add {location_name} to the EcoGuard Watchlist for recurring seasonal monitoring."
+    yoy_signal = (
+        f"Year-over-year NDVI delta: {yoy_delta:+.3f}"
+        if isinstance(yoy_delta, (int, float))
+        else "Year-over-year NDVI baseline unavailable"
     )
+
+    return {
+        "headline": f"{location_name} — {risk_level} Risk{conf_txt}",
+        "summary": (
+            f"Sentinel-2 shows mean NDVI of {ndvi_txt} with {cov_txt} estimated green coverage. "
+            f"Short-term 60-day vegetation decline is {loss_txt} alongside {rain_txt} recorded rainfall."
+        ),
+        "key_signals": [
+            f"Mean NDVI {ndvi_txt} with {cov_txt} green coverage",
+            f"60-day vegetation area decline: {loss_txt}",
+            yoy_signal,
+            f"CHIRPS 60-day rainfall: {rain_txt}",
+            f"Hansen 2021-2025 gross forest loss: {recent_txt}",
+        ],
+        "recommended_actions": [
+            "Verify low-NDVI and recent-loss sub-zones on the ground before declaring permanent clearing.",
+            f"Plan phased native-species restoration (indicative estimate: {trees_txt} trees) on suitable non-wetland land.",
+            f"Keep {location_name} on your EcoGuard Watchlist for recurring seasonal monitoring.",
+        ],
+        "data_caveat": "Satellite risk labels are decision-support indicators and should be paired with field verification.",
+    }
 
 
 def generate_environmental_briefing(
@@ -233,55 +327,89 @@ def generate_environmental_briefing(
     model=None,
 ):
     """
-    Generate a grounded environmental analyst briefing using DeepSeek,
-    with automatic primary->fallback failover and deterministic fallback.
+    Generate a clean, structured environmental briefing using DeepSeek,
+    with strict system prompting, script hygiene, primary->free failover,
+    and deterministic fallback.
     """
     lang = "bn" if str(language).lower().startswith("bn") else "en"
     context = _compact_context(location_name, analysis, risk_result, tree_data)
 
-    lang_instruction = (
-        "Respond strictly in clear, professional Bangla (বাংলা)."
-        if lang == "bn"
-        else "Respond in clear, concise, technical English."
-    )
+    if lang == "bn":
+        language_rules = (
+            "Write ALL text values strictly in natural, fluent, standard Bangla (বাংলা). "
+            "Technical acronyms like NDVI, EVI, NBR, CHIRPS, and Hansen may remain in English letters. "
+            "NEVER output Chinese, Japanese, or Korean characters (zero CJK characters allowed). "
+            "Keep sentences short, crisp, and easy for a Bangladeshi forestry officer to scan."
+        )
+    else:
+        language_rules = (
+            "Write ALL text values in crisp, executive, technical English. "
+            "Keep sentences short, concrete, and scannable."
+        )
 
     system_prompt = (
-        "You are EcoGuard's Senior Remote Sensing & Forestry Analyst specializing in Bangladesh ecosystems. "
-        "ONLY cite numbers present in the provided JSON telemetry. Never invent statistics, coordinates, or dates. "
-        "Distinguish seasonal rainfall/phenology effects from potential deforestation, and note when field verification is needed. "
-        f"{lang_instruction} "
-        "Structure your response into three short sections: 1) Situation Summary, 2) Key Drivers & Signals, 3) Recommended Field Actions. "
-        "Do not use emojis."
+        "You are EcoGuard's Senior Remote Sensing & Forestry Intelligence Analyst for Bangladesh.\n"
+        "STRICT RULES:\n"
+        "1. ONLY cite numbers explicitly present in the input JSON. Never invent numbers, dates, or causes.\n"
+        "2. If a metric is null, mention it briefly in data_caveat rather than repeating 'null' in every sentence.\n"
+        "3. Distinguish seasonal rainfall/phenology shifts from active clearing or fire signals (dNBR).\n"
+        "4. NEVER use emojis or markdown asterisks (** or ##) inside JSON strings.\n"
+        f"5. {language_rules}\n\n"
+        "OUTPUT FORMAT:\n"
+        "Return ONLY a valid JSON object matching this exact schema (no extra prose outside the JSON):\n"
+        "{\n"
+        '  "headline": "Short 1-line executive status headline (max 12 words)",\n'
+        '  "summary": "2-3 concise sentences summarizing current canopy health and change.",\n'
+        '  "key_signals": ["3 to 5 short bullet strings citing exact telemetry metrics"],\n'
+        '  "recommended_actions": ["3 concrete, prioritized field or monitoring actions"],\n'
+        '  "data_caveat": "1 concise sentence noting data limitations or field verification need"\n'
+        "}"
     )
 
     user_prompt = (
-        "Analyze the following grounded satellite and ML telemetry and write an actionable briefing:\n"
+        "Generate the structured EcoGuard executive briefing JSON for this grounded satellite telemetry:\n"
         f"{json.dumps(context, indent=2, default=str)}"
     )
 
-    text, model_used, error = _call_openai_compatible(
+    raw_text, model_used, error = _call_openai_compatible(
         [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
         requested_model=model,
-        temperature=0.25,
-        max_tokens=750,
+        temperature=0.2,
+        max_tokens=850,
     )
 
-    if text:
+    if raw_text:
+        structured = _parse_structured_briefing(raw_text, lang=lang)
+        if structured:
+            plain = _structured_to_plain_text(structured, lang=lang)
+            return {
+                "briefing": plain,
+                "structured": structured,
+                "model_used": model_used,
+                "language": lang,
+                "fallback_used": False,
+                "error": None,
+            }
+        # Clean fallback if model replied in prose instead of strict JSON
+        sanitized = _sanitize_output(raw_text, lang=lang)
         return {
-            "briefing": text,
+            "briefing": sanitized,
+            "structured": None,
             "model_used": model_used,
             "language": lang,
             "fallback_used": False,
             "error": None,
         }
 
+    fallback_struct = _deterministic_structured_briefing(
+        location_name, analysis, risk_result, tree_data, language=lang
+    )
     return {
-        "briefing": _deterministic_briefing(
-            location_name, analysis, risk_result, tree_data, language=lang
-        ),
+        "briefing": _structured_to_plain_text(fallback_struct, lang=lang),
+        "structured": fallback_struct,
         "model_used": "deterministic-fallback",
         "language": lang,
         "fallback_used": True,
@@ -305,16 +433,20 @@ def chat_with_report(
 
     lang = "bn" if str(language).lower().startswith("bn") else "en"
     lang_instruction = (
-        "Answer in clear Bangla (বাংলা)."
+        "Answer strictly in natural, fluent Bangla (বাংলা). Never include Chinese/CJK characters. "
+        "Keep acronyms like NDVI/EVI/NBR in English letters."
         if lang == "bn"
-        else "Answer in clear, concise English."
+        else "Answer in crisp, clear, practical English."
     )
 
     system_prompt = (
-        "You are EcoGuard AI Copilot, a geospatial and forest-monitoring assistant for Bangladesh. "
-        "Ground every answer strictly in the provided satellite report context. "
-        "If a metric is missing or null in the context, state that explicitly rather than guessing. "
-        f"{lang_instruction} Keep answers concise, practical, and free of emojis.\n\n"
+        "You are EcoGuard AI Copilot, a geospatial forest-monitoring specialist for Bangladesh.\n"
+        "STRICT RULES:\n"
+        "1. Ground every answer strictly in the Active Forest Report Context JSON below.\n"
+        "2. Never invent statistics. If a metric is null/missing, state that concisely.\n"
+        "3. Structure your answer cleanly: start with a 1-2 sentence direct answer, then up to 4 concise bullet points using '- '.\n"
+        "4. Do NOT use emojis. Keep total length under 180 words.\n"
+        f"5. {lang_instruction}\n\n"
         f"Active Forest Report Context:\n{json.dumps(report_context or {}, default=str)}"
     )
 
@@ -330,20 +462,19 @@ def chat_with_report(
     text, model_used, error = _call_openai_compatible(
         messages,
         requested_model=model,
-        temperature=0.3,
-        max_tokens=650,
+        temperature=0.25,
+        max_tokens=600,
     )
 
     if text:
         return {
-            "reply": text,
+            "reply": _sanitize_output(text, lang=lang),
             "model_used": model_used,
             "language": lang,
             "fallback_used": False,
             "error": None,
         }
 
-    # Helpful deterministic fallback when LLM key is not set yet
     location = (report_context or {}).get("location") or "the selected area"
     risk = ((report_context or {}).get("risk_assessment") or {}).get("risk_level") or "UNKNOWN"
     veg = (report_context or {}).get("vegetation_metrics") or {}
@@ -352,17 +483,19 @@ def chat_with_report(
 
     if lang == "bn":
         fallback_reply = (
-            f"DeepSeek API key এখনো সেট করা হয়নি ({error})। "
-            f"বর্তমান সংরক্ষিত ডেটা অনুযায়ী {location}-এর ঝুঁকির মাত্রা {risk}, "
-            f"NDVI {ndvi if ndvi is not None else 'N/A'}, এবং ৬০-দিনের উদ্ভিদ হ্রাস {loss if loss is not None else 'N/A'}%। "
-            "সম্পূর্ণ AI বিশ্লেষণের জন্য `.env` ফাইলে `LLM_API_KEY` যোগ করুন।"
+            f"DeepSeek AI বর্তমানে অফলাইন ফলব্যাক মোডে আছে ({error})।\n"
+            f"- অবস্থান: {location}\n"
+            f"- ঝুঁকির মাত্রা: {risk}\n"
+            f"- বর্তমান NDVI: {ndvi if ndvi is not None else 'N/A'}\n"
+            f"- ৬০-দিনের উদ্ভিদ হ্রাস: {loss if loss is not None else 'N/A'}%"
         )
     else:
         fallback_reply = (
-            f"DeepSeek AI is currently running in offline fallback mode ({error}). "
-            f"Based on the grounded telemetry for {location}, risk is {risk}, "
-            f"current NDVI is {ndvi if ndvi is not None else 'N/A'}, and 60-day vegetation loss is "
-            f"{loss if loss is not None else 'N/A'}%. Add your LLM_API_KEY to .env to enable live DeepSeek responses."
+            f"DeepSeek AI is currently running in offline fallback mode ({error}).\n"
+            f"- Location: {location}\n"
+            f"- Risk level: {risk}\n"
+            f"- Current NDVI: {ndvi if ndvi is not None else 'N/A'}\n"
+            f"- 60-day vegetation loss: {loss if loss is not None else 'N/A'}%"
         )
 
     return {

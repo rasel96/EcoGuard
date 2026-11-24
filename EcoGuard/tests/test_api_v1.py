@@ -383,3 +383,21 @@ def test_api_json_404_security_headers_and_cloud_helpers(client, monkeypatch):
         assert gee_service._load_service_account_credentials() == "sa-creds"
         mock_sa.assert_called_once()
 
+
+def test_llm_structured_briefing_cjk_sanitizer_and_priority_places():
+    import location_service
+
+    raw = '```json\n{"headline": "Sundarbans স্থিতিশীল", "summary": "পর্যবেক্ষণকালী中 NDVI 0.45।", "key_signals": ["NDVI 0.45"], "recommended_actions": ["মাঠ যাচাই"], "data_caveat": "যাচাই প্রয়োজন"}\n```'
+    parsed = llm_service._parse_structured_briefing(raw, lang="bn")
+    assert parsed is not None
+    assert "中" not in parsed["summary"]
+    assert parsed["key_signals"] == ["NDVI 0.45"]
+
+    location_service.clear_location_cache()
+    with patch.object(location_service.geolocator, "geocode", return_value=[]):
+        suggestions = location_service.suggest_locations("Sundar")
+        assert len(suggestions) >= 1
+        assert "Sundarbans" in suggestions[0]["name"]
+        assert suggestions[0]["boundingbox"] is not None
+
+

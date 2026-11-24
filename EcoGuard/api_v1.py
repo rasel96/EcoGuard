@@ -517,10 +517,23 @@ def api_analyze(user):
         return jsonify({"error": f"Satellite analysis failed: {err}"}), 502
 
     hist = analysis_data.get("historical_forest_loss") or {}
+    # If short-term previous 60-day window still had zero cloud-free pixels,
+    # fall back to Year-over-Year NDVI delta so risk doesn't collapse to UNKNOWN.
+    effective_prev_ndvi = analysis_data.get("previous_ndvi")
+    effective_veg_loss = analysis_data.get("vegetation_loss")
+    if effective_veg_loss is None and analysis_data.get("current_ndvi") is not None:
+        yoy_ndvi = analysis_data.get("yoy_ndvi")
+        if yoy_ndvi is not None and yoy_ndvi > 0:
+            effective_prev_ndvi = yoy_ndvi
+            effective_veg_loss = max(
+                0.0,
+                round(((yoy_ndvi - analysis_data["current_ndvi"]) / yoy_ndvi) * 100, 2),
+            )
+
     risk_result = assess_risk(
         analysis_data.get("current_ndvi"),
-        analysis_data.get("vegetation_loss"),
-        previous_ndvi=analysis_data.get("previous_ndvi"),
+        effective_veg_loss,
+        previous_ndvi=effective_prev_ndvi,
         rainfall=analysis_data.get("rainfall"),
         yoy_ndvi_change=analysis_data.get("yoy_ndvi_change"),
         recent_5yr_loss_ha=hist.get("recent_5_year_loss_hectares"),

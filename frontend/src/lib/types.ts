@@ -92,6 +92,7 @@ export interface LocationSuggestion {
   name: string;
   latitude: number;
   longitude: number;
+  boundingbox?: number[] | null;
 }
 
 export interface GeoJsonPolygon {
@@ -134,8 +135,17 @@ export interface TreeData {
   target: number;
 }
 
+export interface StructuredBriefing {
+  headline: string;
+  summary: string;
+  key_signals: string[];
+  recommended_actions: string[];
+  data_caveat: string;
+}
+
 export interface AiBriefingResult {
   briefing: string;
+  structured?: StructuredBriefing | null;
   model_used: string;
   language: "en" | "bn";
   fallback_used: boolean;

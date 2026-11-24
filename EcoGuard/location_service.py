@@ -109,6 +109,89 @@ def get_location(place_name):
         return None
 
 
+# Curated major Bangladesh forests & regions ranked first in autocomplete
+# so partial queries like "Sundar" surface Sundarbans before small villages.
+BANGLADESH_PRIORITY_PLACES = [
+    {
+        "name": "Sundarbans, Khulna Division, Bangladesh",
+        "latitude": 22.0240,
+        "longitude": 89.3136,
+        "boundingbox": [21.5402, 22.5018, 88.6764, 89.9355],
+        "keywords": ["sundarban", "sundarbans", "mangrove", "khulna forest"],
+    },
+    {
+        "name": "Lawachara National Park, Moulvibazar District, Sylhet Division, Bangladesh",
+        "latitude": 24.3292,
+        "longitude": 91.7879,
+        "boundingbox": [24.3053, 24.3531, 91.7699, 91.8253],
+        "keywords": ["lawachara", "srimangal", "sreemangal", "moulvibazar"],
+    },
+    {
+        "name": "Madhupur National Park, Tangail District, Dhaka Division, Bangladesh",
+        "latitude": 24.6960,
+        "longitude": 90.0680,
+        "boundingbox": [24.6400, 24.7500, 90.0100, 90.1300],
+        "keywords": ["madhupur", "modhupur", "tangail"],
+    },
+    {
+        "name": "Ratargul Swamp Forest, Sylhet District, Sylhet Division, Bangladesh",
+        "latitude": 25.0130,
+        "longitude": 91.9240,
+        "boundingbox": [24.9900, 25.0350, 91.8950, 91.9550],
+        "keywords": ["ratargul", "swamp forest", "sylhet forest"],
+    },
+    {
+        "name": "Rema-Kalenga Wildlife Sanctuary, Habiganj District, Sylhet Division, Bangladesh",
+        "latitude": 24.1150,
+        "longitude": 91.6220,
+        "boundingbox": [24.0800, 24.1550, 91.5850, 91.6600],
+        "keywords": ["rema", "kalenga", "habiganj"],
+    },
+    {
+        "name": "Satchari National Park, Habiganj District, Sylhet Division, Bangladesh",
+        "latitude": 24.1225,
+        "longitude": 91.4495,
+        "boundingbox": [24.1050, 24.1400, 91.4300, 91.4700],
+        "keywords": ["satchari", "chunarughat"],
+    },
+    {
+        "name": "Bhawal National Park, Gazipur District, Dhaka Division, Bangladesh",
+        "latitude": 24.0980,
+        "longitude": 90.4040,
+        "boundingbox": [24.0550, 24.1400, 90.3650, 90.4450],
+        "keywords": ["bhawal", "gazipur"],
+    },
+    {
+        "name": "Rangamati Hill District, Chattogram Division, Bangladesh",
+        "latitude": 22.6533,
+        "longitude": 92.1789,
+        "boundingbox": [22.2500, 23.2500, 91.9500, 92.4500],
+        "keywords": ["rangamati", "kaptai", "chittagong hill"],
+    },
+    {
+        "name": "Bandarban Hill District, Chattogram Division, Bangladesh",
+        "latitude": 22.1953,
+        "longitude": 92.2184,
+        "boundingbox": [21.6500, 22.3800, 92.0500, 92.6500],
+        "keywords": ["bandarban", "sajek", "nilgiri"],
+    },
+]
+
+
+def _match_priority_places(query_lower):
+    matches = []
+    for place in BANGLADESH_PRIORITY_PLACES:
+        name_l = place["name"].lower()
+        if query_lower in name_l or any(query_lower in kw or kw in query_lower for kw in place["keywords"]):
+            matches.append({
+                "name": place["name"],
+                "latitude": place["latitude"],
+                "longitude": place["longitude"],
+                "boundingbox": place["boundingbox"],
+            })
+    return matches
+
+
 def suggest_locations(search_text, limit=7):
     """Return location suggestions for the autocomplete search box."""
     if not search_text or len(search_text.strip()) < 2:
@@ -119,6 +202,9 @@ def suggest_locations(search_text, limit=7):
     cached = _cache_get(_suggest_cache, cache_key)
     if cached is not None:
         return cached
+
+    suggestions = _match_priority_places(query.lower())
+    seen_names = {item["name"].lower() for item in suggestions}
 
     try:
         results = geolocator.geocode(
@@ -131,18 +217,29 @@ def suggest_locations(search_text, limit=7):
             limit=limit
         )
 
-        suggestions = []
-
         for item in results or []:
+            if item.address.lower() in seen_names:
+                continue
+            raw_bbox = item.raw.get("boundingbox")
+            bbox = (
+                [float(raw_bbox[0]), float(raw_bbox[1]), float(raw_bbox[2]), float(raw_bbox[3])]
+                if raw_bbox and len(raw_bbox) == 4
+                else None
+            )
             suggestions.append({
                 "name": item.address,
                 "latitude": float(item.latitude),
-                "longitude": float(item.longitude)
+                "longitude": float(item.longitude),
+                "boundingbox": bbox,
             })
+            seen_names.add(item.address.lower())
+            if len(suggestions) >= limit:
+                break
 
+        suggestions = suggestions[:limit]
         _cache_set(_suggest_cache, cache_key, suggestions)
         return suggestions
 
     except Exception as error:
         logger.warning("Autocomplete error for '%s': %s", search_text, error)
-        return []
+        return suggestions[:limit]

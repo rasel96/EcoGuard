@@ -73,4 +73,4 @@ def test_location_service_suggest_and_error_handling():
 
     with patch.object(location_service.geolocator, "geocode", side_effect=RuntimeError("timeout")):
         assert location_service.get_location("Dhaka") is None
-        assert location_service.suggest_locations("Dhaka") == []
+        assert location_service.suggest_locations("UnknownTownXYZ") == []

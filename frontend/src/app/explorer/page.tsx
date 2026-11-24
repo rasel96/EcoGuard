@@ -38,6 +38,7 @@ function ExplorerContent() {
   const [query, setQuery] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<LocationSuggestion | null>(null);
 
   const [activePolygon, setActivePolygon] = useState<GeoJsonPolygon | null>(null);
   const [language, setLanguage] = useState<"en" | "bn">("en");
@@ -204,6 +205,7 @@ function ExplorerContent() {
                     type="button"
                     onClick={() => {
                       setQuery(s.name);
+                      setSelectedLocation(s);
                       setActivePolygon(null);
                       setShowSuggestions(false);
                     }}
@@ -276,7 +278,17 @@ function ExplorerContent() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
           <div className="xl:col-span-7 space-y-6">
             <SatelliteMap
-              boundingBox={report?.location.boundingbox}
+              boundingBox={report?.location.boundingbox ?? selectedLocation?.boundingbox}
+              focusLocation={
+                report
+                  ? {
+                      name: report.location.name,
+                      latitude: report.location.latitude,
+                      longitude: report.location.longitude,
+                      boundingbox: report.location.boundingbox,
+                    }
+                  : selectedLocation
+              }
               ndviTileUrl={report?.analysis.ndvi_tile_url}
               landcoverTileUrl={report?.analysis.landcover_tile_url}
               hansenTileUrl={report?.analysis.hansen_loss_tile_url}

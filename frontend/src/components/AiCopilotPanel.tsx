@@ -3,12 +3,15 @@
 import React, { useState } from "react";
 import {
   ArrowClockwise,
+  CheckCircle,
   Cpu,
+  Info,
   PaperPlaneRight,
+  Pulse,
   Translate,
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
-import type { AnalyzeResponse, ChatTurn } from "@/lib/types";
+import type { AnalyzeResponse, ChatTurn, StructuredBriefing } from "@/lib/types";
 
 interface AiCopilotPanelProps {
   report: AnalyzeResponse;
@@ -33,6 +36,65 @@ const SUGGESTED_QUESTIONS: Record<"en" | "bn", string[]> = {
   ],
 };
 
+function renderInlineBold(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return (
+        <strong key={i} className="font-semibold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
+}
+
+function FormattedMarkdown({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <div className="space-y-1.5 text-xs sm:text-sm leading-relaxed text-zinc-200">
+      {lines.map((raw, idx) => {
+        const line = raw.trim();
+        if (!line) return <div key={idx} className="h-1" />;
+
+        if (line.startsWith("### ") || line.startsWith("## ") || line.startsWith("# ")) {
+          const clean = line.replace(/^#{1,3}\s+/, "").replace(/\*\*/g, "");
+          return (
+            <div key={idx} className="text-xs font-semibold uppercase tracking-wide text-emerald-300 pt-1">
+              {clean}
+            </div>
+          );
+        }
+
+        if (/^[-•*]\s+/.test(line)) {
+          const item = line.replace(/^[-•*]\s+/, "");
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1">
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+              <span>{renderInlineBold(item)}</span>
+            </div>
+          );
+        }
+
+        const numbered = line.match(/^(\d+)[.)]\s+(.*)$/);
+        if (numbered) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1">
+              <span className="font-mono text-[11px] text-emerald-400 mt-0.5 shrink-0">
+                {numbered[1]}.
+              </span>
+              <span>{renderInlineBold(numbered[2])}</span>
+            </div>
+          );
+        }
+
+        return <p key={idx}>{renderInlineBold(line)}</p>;
+      })}
+    </div>
+  );
+}
+
 export default function AiCopilotPanel({
   report,
   availableModels = DEFAULT_MODELS,
@@ -44,6 +106,9 @@ export default function AiCopilotPanel({
     report.ai?.language || "en"
   );
   const [briefing, setBriefing] = useState<string>(report.ai?.briefing || "");
+  const [structured, setStructured] = useState<StructuredBriefing | null>(
+    report.ai?.structured || null
+  );
   const [briefingModel, setBriefingModel] = useState<string>(
     report.ai?.model_used || "deterministic-fallback"
   );
@@ -87,6 +152,7 @@ export default function AiCopilotPanel({
         model: nextModel,
       });
       setBriefing(res.briefing);
+      setStructured(res.structured || null);
       setBriefingModel(res.model_used);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate briefing");
@@ -195,8 +261,8 @@ export default function AiCopilotPanel({
         </div>
       </div>
 
-      {/* Executive Briefing Section */}
-      <div className="p-5 border-b border-white/[0.08] space-y-3 bg-[#0e1411]">
+      {/* Structured Executive Briefing */}
+      <div className="p-5 border-b border-white/[0.08] space-y-4 bg-[#0e1411]">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-400">
             Executive Briefing · {briefingModel}
@@ -216,15 +282,76 @@ export default function AiCopilotPanel({
         </div>
 
         {briefingLoading ? (
-          <div className="space-y-2 py-2">
-            <div className="h-3.5 w-3/4 rounded bg-white/[0.06] animate-pulse" />
-            <div className="h-3.5 w-full rounded bg-white/[0.06] animate-pulse" />
-            <div className="h-3.5 w-5/6 rounded bg-white/[0.06] animate-pulse" />
+          <div className="space-y-2.5 py-2">
+            <div className="h-4 w-2/3 rounded bg-white/[0.07] animate-pulse" />
+            <div className="h-3.5 w-full rounded bg-white/[0.05] animate-pulse" />
+            <div className="h-3.5 w-5/6 rounded bg-white/[0.05] animate-pulse" />
+            <div className="h-16 w-full rounded-xl bg-white/[0.04] animate-pulse" />
+          </div>
+        ) : structured ? (
+          <div className="space-y-4">
+            {structured.headline && (
+              <h4 className="text-sm sm:text-base font-semibold text-white leading-snug">
+                {structured.headline}
+              </h4>
+            )}
+
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              {structured.summary}
+            </p>
+
+            {structured.key_signals.length > 0 && (
+              <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-emerald-300">
+                  <Pulse size={14} />
+                  <span>{language === "bn" ? "মূল সংকেতসমূহ" : "Key Signals"}</span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-zinc-200 leading-relaxed">
+                  {structured.key_signals.map((sig, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      <span>{sig}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {structured.recommended_actions.length > 0 && (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-emerald-300">
+                  <CheckCircle size={14} />
+                  <span>
+                    {language === "bn" ? "প্রস্তাবিত পদক্ষেপ" : "Recommended Field Actions"}
+                  </span>
+                </div>
+                <ol className="space-y-1.5 text-xs text-zinc-200 leading-relaxed">
+                  {structured.recommended_actions.map((act, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5">
+                      <span className="font-mono text-[11px] text-emerald-400 font-semibold shrink-0">
+                        0{idx + 1}
+                      </span>
+                      <span>{act}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {structured.data_caveat && (
+              <div className="flex items-start gap-2 text-[11px] text-zinc-400 leading-relaxed pt-1 border-t border-white/[0.06]">
+                <Info size={14} className="text-zinc-500 shrink-0 mt-0.5" />
+                <span>{structured.data_caveat}</span>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="text-xs sm:text-sm leading-relaxed text-zinc-200 whitespace-pre-line">
-            {briefing || "Run an analysis to generate a grounded environmental briefing."}
-          </div>
+          <FormattedMarkdown
+            text={
+              briefing ||
+              "Run an analysis to generate a grounded environmental briefing."
+            }
+          />
         )}
       </div>
 
@@ -248,13 +375,17 @@ export default function AiCopilotPanel({
             {messages.map((m, idx) => (
               <div
                 key={idx}
-                className={`rounded-xl px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
+                className={`rounded-xl px-3.5 py-2.5 ${
                   m.role === "user"
-                    ? "bg-emerald-500/12 border border-emerald-500/25 text-emerald-100 ml-8"
-                    : "bg-white/[0.04] border border-white/[0.07] text-zinc-200 mr-4"
+                    ? "bg-emerald-500/12 border border-emerald-500/25 text-emerald-100 text-xs sm:text-sm ml-8"
+                    : "bg-white/[0.04] border border-white/[0.07] mr-4"
                 }`}
               >
-                {m.content}
+                {m.role === "user" ? (
+                  <span>{m.content}</span>
+                ) : (
+                  <FormattedMarkdown text={m.content} />
+                )}
                 {m.model_used && (
                   <div className="mt-1.5 text-[10px] font-mono text-zinc-500">
                     via {m.model_used}

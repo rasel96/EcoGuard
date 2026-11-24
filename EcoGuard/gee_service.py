@@ -322,7 +322,8 @@ def mask_sentinel_clouds(image):
 def get_sentinel_collection(
     geometry,
     start_date,
-    end_date
+    end_date,
+    max_cloud_percent=40
 ):
 
     return (
@@ -337,7 +338,7 @@ def get_sentinel_collection(
         .filter(
             ee.Filter.lte(
                 "CLOUDY_PIXEL_PERCENTAGE",
-                40
+                max_cloud_percent
             )
         )
         .map(mask_sentinel_clouds)
@@ -478,12 +479,19 @@ def calculate_period_stats(
     scale=100
 ):
 
-    collection = get_sentinel_collection(
-        geometry,
-        start_date,
-        end_date
+    # Try strict <=40% cloud scenes first; fall back to <=85% (still SCL pixel-masked)
+    # so Bangladesh monsoon windows (Jul-Sep) don't return empty null stats.
+    strict_col = get_sentinel_collection(
+        geometry, start_date, end_date, max_cloud_percent=40
+    )
+    relaxed_col = get_sentinel_collection(
+        geometry, start_date, end_date, max_cloud_percent=85
     )
 
+    strict_count = strict_col.size()
+    collection = ee.ImageCollection(
+        ee.Algorithms.If(strict_count.gt(0), strict_col, relaxed_col)
+    )
     count = collection.size()
     empty_img = (
         ee.Image.constant([0, 0, 0])
@@ -554,11 +562,51 @@ def calculate_period_stats(
 # 6. RAINFALL ANALYSIS
 # ============================================================
 
+def _get_latest_chirps_date():
+    """Fetch and cache the latest published CHIRPS daily image date (6h TTL)."""
+    cache_id = "chirps:latest_date"
+    cached = _cache_get(cache_id)
+    if cached is not None:
+        return cached
+    try:
+        latest_str = _run_with_retry(
+            lambda: (
+                ee.ImageCollection("UCSB-CHG/CHIRPS/DAILY")
+                .sort("system:time_start", False)
+                .first()
+                .date()
+                .format("YYYY-MM-dd")
+                .getInfo()
+            )
+        )
+        latest_d = date.fromisoformat(latest_str)
+        _cache_set(cache_id, latest_d)
+        return latest_d
+    except Exception as err:
+        logger.warning("Could not fetch latest CHIRPS date: %s", err)
+        return None
+
+
 def get_rainfall(
     geometry,
     start_date,
     end_date
 ):
+    # CHIRPS Daily often lags real time by 3-8 weeks; align the 60-day window
+    # to the latest actually published CHIRPS date so we never compute a tiny
+    # 5-day slice as "0.0 mm" for the full period.
+    try:
+        req_start = date.fromisoformat(start_date)
+        req_end = date.fromisoformat(end_date)
+        window_days = max(1, (req_end - req_start).days)
+        latest_chirps = _get_latest_chirps_date()
+        if latest_chirps and req_end > latest_chirps:
+            eff_end = latest_chirps
+            eff_start = eff_end - timedelta(days=window_days)
+            start_date = eff_start.isoformat()
+            end_date = eff_end.isoformat()
+    except Exception:
+        pass
 
     collection = (
 
@@ -573,24 +621,20 @@ def get_rainfall(
 
     )
 
-    count = collection.size().getInfo()
+    count = _run_with_retry(lambda: collection.size().getInfo())
 
     if not count:
         return None
 
-    rainfall = collection.sum().reduceRegion(
-
-        reducer=ee.Reducer.mean(),
-
-        geometry=geometry,
-
-        scale=5500,
-
-        maxPixels=1e13,
-
-        bestEffort=True
-
-    ).get("precipitation").getInfo()
+    rainfall = _run_with_retry(
+        lambda: collection.sum().reduceRegion(
+            reducer=ee.Reducer.mean(),
+            geometry=geometry,
+            scale=5500,
+            maxPixels=1e13,
+            bestEffort=True,
+        ).get("precipitation").getInfo()
+    )
 
     return safe_number(
         rainfall
