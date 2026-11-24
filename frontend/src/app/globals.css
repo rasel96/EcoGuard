@@ -44,3 +44,8 @@ body {
 .leaflet-control-attribution a {
   color: #6ee7b7 !important;
 }
+
+.ecoguard-drawing .leaflet-container,
+.ecoguard-drawing .leaflet-grab {
+  cursor: crosshair !important;
+}

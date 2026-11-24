@@ -293,11 +293,21 @@ export default function SatelliteMap({
         </div>
       </div>
 
-      {/* Leaflet Canvas */}
+      {/* Leaflet Canvas (wrapper owns dynamic class so React never overwrites Leaflet's container classes) */}
       <div
-        ref={containerRef}
-        className={`w-full h-[430px] sm:h-[490px] ${drawing ? "cursor-crosshair" : ""}`}
-      />
+        className={`relative w-full h-[430px] sm:h-[490px] ${
+          drawing ? "ecoguard-drawing" : ""
+        }`}
+      >
+        <div ref={containerRef} className="w-full h-full" />
+        {drawing && (
+          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[1000] rounded-full border border-emerald-400/40 bg-[#0a0e0c]/90 px-3.5 py-1.5 text-[11px] font-mono text-emerald-200 shadow-lg">
+            Click {Math.max(0, 3 - draftPoints.length) > 0
+              ? `at least ${3 - draftPoints.length} more point${3 - draftPoints.length === 1 ? "" : "s"}`
+              : "more points or Apply"} to define AOI ({draftPoints.length} placed)
+          </div>
+        )}
+      </div>
 
       {/* Satellite Overlay Switcher Footer */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 border-t border-white/[0.08] bg-[#111714] text-xs">
