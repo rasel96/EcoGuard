@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EcoGuard | Geospatial Forest Intelligence",
+  title: "EcoGuard | Bangladesh Forest & Deforestation Intelligence",
   description:
-    "Satellite forest monitoring, custom polygon remote sensing, and DeepSeek AI environmental intelligence for Bangladesh.",
+    "Satellite forest conservation, real-time deforestation detection, custom polygon remote sensing, and DeepSeek AI intelligence for Bangladesh forests.",
 };
 
 export default function RootLayout({
@@ -28,11 +28,11 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} dark`}
+      className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body
         suppressHydrationWarning
-        className="min-h-[100dvh] bg-[#0a0e0c] text-[#f4f7f5] antialiased selection:bg-emerald-500/30 selection:text-emerald-200"
+        className="min-h-[100dvh] bg-[#f5faf6] text-[#0b2419] antialiased selection:bg-emerald-200/70 selection:text-emerald-950"
       >
         {children}
       </body>

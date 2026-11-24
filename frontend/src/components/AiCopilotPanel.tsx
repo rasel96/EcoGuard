@@ -41,7 +41,7 @@ function renderInlineBold(text: string): React.ReactNode {
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
       return (
-        <strong key={i} className="font-semibold text-white">
+        <strong key={i} className="font-semibold text-[#0b2419]">
           {part.slice(2, -2)}
         </strong>
       );
@@ -53,7 +53,7 @@ function renderInlineBold(text: string): React.ReactNode {
 function FormattedMarkdown({ text }: { text: string }) {
   const lines = text.split("\n");
   return (
-    <div className="space-y-1.5 text-xs sm:text-sm leading-relaxed text-zinc-200">
+    <div className="space-y-1.5 text-xs sm:text-sm leading-relaxed text-[#1f3d2f]">
       {lines.map((raw, idx) => {
         const line = raw.trim();
         if (!line) return <div key={idx} className="h-1" />;
@@ -61,7 +61,7 @@ function FormattedMarkdown({ text }: { text: string }) {
         if (line.startsWith("### ") || line.startsWith("## ") || line.startsWith("# ")) {
           const clean = line.replace(/^#{1,3}\s+/, "").replace(/\*\*/g, "");
           return (
-            <div key={idx} className="text-xs font-semibold uppercase tracking-wide text-emerald-300 pt-1">
+            <div key={idx} className="text-xs font-semibold uppercase tracking-wide text-[#0f5c3e] pt-1">
               {clean}
             </div>
           );
@@ -71,7 +71,7 @@ function FormattedMarkdown({ text }: { text: string }) {
           const item = line.replace(/^[-•*]\s+/, "");
           return (
             <div key={idx} className="flex items-start gap-2 pl-1">
-              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
               <span>{renderInlineBold(item)}</span>
             </div>
           );
@@ -81,7 +81,7 @@ function FormattedMarkdown({ text }: { text: string }) {
         if (numbered) {
           return (
             <div key={idx} className="flex items-start gap-2 pl-1">
-              <span className="font-mono text-[11px] text-emerald-400 mt-0.5 shrink-0">
+              <span className="font-mono text-[11px] font-semibold text-[#0f5c3e] mt-0.5 shrink-0">
                 {numbered[1]}.
               </span>
               <span>{renderInlineBold(numbered[2])}</span>
@@ -196,18 +196,18 @@ export default function AiCopilotPanel({
   };
 
   return (
-    <div className="rounded-2xl border border-white/[0.1] bg-[#111714] flex flex-col overflow-hidden">
+    <div className="rounded-2xl forest-card flex flex-col overflow-hidden">
       {/* Header Controls */}
-      <div className="px-5 py-4 border-b border-white/[0.08] flex flex-wrap items-center justify-between gap-3">
+      <div className="px-5 py-4 border-b border-emerald-950/10 bg-[#fafdfb] flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="w-8 h-8 rounded-lg bg-[#0f5c3e] flex items-center justify-center text-white shadow-xs">
             <Cpu size={18} weight="duotone" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">
+            <h3 className="text-sm font-semibold text-[#0b2419]">
               DeepSeek Forest Copilot
             </h3>
-            <p className="text-[11px] font-mono text-zinc-400">
+            <p className="text-[11px] font-mono text-[#5c7a6b]">
               tokenharbor.ai/v1 · Grounded in GEE telemetry
             </p>
           </div>
@@ -218,7 +218,7 @@ export default function AiCopilotPanel({
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
             aria-label="Select DeepSeek model"
-            className="bg-[#0a0e0c] border border-white/[0.12] rounded-lg px-2.5 py-1.5 text-xs font-mono text-zinc-200 focus:outline-none focus:border-emerald-500/60"
+            className="bg-white border border-emerald-950/15 rounded-lg px-2.5 py-1.5 text-xs font-mono text-[#0b2419] focus:outline-none focus:border-[#0f5c3e]"
           >
             {availableModels.map((m) => (
               <option key={m} value={m}>
@@ -227,17 +227,17 @@ export default function AiCopilotPanel({
             ))}
           </select>
 
-          <div className="inline-flex rounded-lg border border-white/[0.1] bg-[#0a0e0c] p-0.5 text-xs">
+          <div className="inline-flex rounded-lg border border-emerald-950/12 bg-[#edf5ef] p-0.5 text-xs font-medium">
             <button
               type="button"
               onClick={() => {
                 setLanguage("en");
                 regenerateBriefing("en", selectedModel);
               }}
-              className={`px-2.5 py-1 rounded-md inline-flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-md inline-flex items-center gap-1 transition-colors ${
                 language === "en"
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-white text-[#0f5c3e] shadow-xs font-semibold"
+                  : "text-[#466355] hover:text-[#0b2419]"
               }`}
             >
               <Translate size={13} />
@@ -249,10 +249,10 @@ export default function AiCopilotPanel({
                 setLanguage("bn");
                 regenerateBriefing("bn", selectedModel);
               }}
-              className={`px-2.5 py-1 rounded-md ${
+              className={`px-2.5 py-1 rounded-md transition-colors ${
                 language === "bn"
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-white text-[#0f5c3e] shadow-xs font-semibold"
+                  : "text-[#466355] hover:text-[#0b2419]"
               }`}
             >
               বাংলা
@@ -262,16 +262,16 @@ export default function AiCopilotPanel({
       </div>
 
       {/* Structured Executive Briefing */}
-      <div className="p-5 border-b border-white/[0.08] space-y-4 bg-[#0e1411]">
+      <div className="p-5 border-b border-emerald-950/10 space-y-4 bg-[#f7fbf8]">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-400">
+          <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#0f5c3e]">
             Executive Briefing · {briefingModel}
           </span>
           <button
             type="button"
             disabled={briefingLoading}
             onClick={() => regenerateBriefing(language, selectedModel)}
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] transition-colors active:scale-[0.98] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#234234] hover:text-[#0f5c3e] px-2.5 py-1 rounded-lg bg-white border border-emerald-950/12 hover:bg-[#edf5ef] transition-colors active:scale-[0.98] disabled:opacity-50"
           >
             <ArrowClockwise
               size={13}
@@ -283,33 +283,33 @@ export default function AiCopilotPanel({
 
         {briefingLoading ? (
           <div className="space-y-2.5 py-2">
-            <div className="h-4 w-2/3 rounded bg-white/[0.07] animate-pulse" />
-            <div className="h-3.5 w-full rounded bg-white/[0.05] animate-pulse" />
-            <div className="h-3.5 w-5/6 rounded bg-white/[0.05] animate-pulse" />
-            <div className="h-16 w-full rounded-xl bg-white/[0.04] animate-pulse" />
+            <div className="h-4 w-2/3 rounded bg-emerald-950/10 animate-pulse" />
+            <div className="h-3.5 w-full rounded bg-emerald-950/8 animate-pulse" />
+            <div className="h-3.5 w-5/6 rounded bg-emerald-950/8 animate-pulse" />
+            <div className="h-16 w-full rounded-xl bg-white border border-emerald-950/8 animate-pulse" />
           </div>
         ) : structured ? (
           <div className="space-y-4">
             {structured.headline && (
-              <h4 className="text-sm sm:text-base font-semibold text-white leading-snug">
+              <h4 className="text-sm sm:text-base font-semibold text-[#0b2419] leading-snug">
                 {structured.headline}
               </h4>
             )}
 
-            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#2d4a3c] leading-relaxed">
               {structured.summary}
             </p>
 
             {structured.key_signals.length > 0 && (
-              <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5 space-y-2">
-                <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-emerald-300">
+              <div className="rounded-xl border border-emerald-950/10 bg-white p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider font-semibold text-[#0f5c3e]">
                   <Pulse size={14} />
-                  <span>{language === "bn" ? "মূল সংকেতসমূহ" : "Key Signals"}</span>
+                  <span>{language === "bn" ? "মূল সংকেতসমূহ" : "Key Canopy Signals"}</span>
                 </div>
-                <ul className="space-y-1.5 text-xs text-zinc-200 leading-relaxed">
+                <ul className="space-y-1.5 text-xs text-[#234234] leading-relaxed">
                   {structured.key_signals.map((sig, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
                       <span>{sig}</span>
                     </li>
                   ))}
@@ -318,17 +318,17 @@ export default function AiCopilotPanel({
             )}
 
             {structured.recommended_actions.length > 0 && (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3.5 space-y-2">
-                <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-emerald-300">
-                  <CheckCircle size={14} />
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider font-semibold text-[#0f5c3e]">
+                  <CheckCircle size={14} weight="fill" className="text-emerald-600" />
                   <span>
                     {language === "bn" ? "প্রস্তাবিত পদক্ষেপ" : "Recommended Field Actions"}
                   </span>
                 </div>
-                <ol className="space-y-1.5 text-xs text-zinc-200 leading-relaxed">
+                <ol className="space-y-1.5 text-xs text-[#19382a] leading-relaxed">
                   {structured.recommended_actions.map((act, idx) => (
                     <li key={idx} className="flex items-start gap-2.5">
-                      <span className="font-mono text-[11px] text-emerald-400 font-semibold shrink-0">
+                      <span className="font-mono text-[11px] text-[#0f5c3e] font-semibold shrink-0">
                         0{idx + 1}
                       </span>
                       <span>{act}</span>
@@ -339,8 +339,8 @@ export default function AiCopilotPanel({
             )}
 
             {structured.data_caveat && (
-              <div className="flex items-start gap-2 text-[11px] text-zinc-400 leading-relaxed pt-1 border-t border-white/[0.06]">
-                <Info size={14} className="text-zinc-500 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-[11px] text-[#557464] leading-relaxed pt-1 border-t border-emerald-950/8">
+                <Info size={14} className="text-[#5c7a6b] shrink-0 mt-0.5" />
                 <span>{structured.data_caveat}</span>
               </div>
             )}
@@ -356,14 +356,14 @@ export default function AiCopilotPanel({
       </div>
 
       {/* Interactive Report Q&A */}
-      <div className="p-5 flex-1 flex flex-col gap-4">
+      <div className="p-5 flex-1 flex flex-col gap-4 bg-white">
         <div className="flex flex-wrap gap-1.5">
           {SUGGESTED_QUESTIONS[language].map((prompt) => (
             <button
               key={prompt}
               type="button"
               onClick={() => sendQuestion(prompt)}
-              className="text-left text-[11px] px-2.5 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-200 transition-colors"
+              className="text-left text-[11px] px-2.5 py-1.5 rounded-lg border border-emerald-950/12 bg-[#f5faf6] text-[#234234] hover:border-[#0f5c3e]/40 hover:bg-emerald-50 hover:text-[#0f5c3e] transition-colors"
             >
               {prompt}
             </button>
@@ -377,8 +377,8 @@ export default function AiCopilotPanel({
                 key={idx}
                 className={`rounded-xl px-3.5 py-2.5 ${
                   m.role === "user"
-                    ? "bg-emerald-500/12 border border-emerald-500/25 text-emerald-100 text-xs sm:text-sm ml-8"
-                    : "bg-white/[0.04] border border-white/[0.07] mr-4"
+                    ? "bg-[#0f5c3e] text-white text-xs sm:text-sm ml-8"
+                    : "bg-[#f5faf6] border border-emerald-950/10 mr-4"
                 }`}
               >
                 {m.role === "user" ? (
@@ -387,7 +387,7 @@ export default function AiCopilotPanel({
                   <FormattedMarkdown text={m.content} />
                 )}
                 {m.model_used && (
-                  <div className="mt-1.5 text-[10px] font-mono text-zinc-500">
+                  <div className="mt-1.5 text-[10px] font-mono text-[#5c7a6b]">
                     via {m.model_used}
                   </div>
                 )}
@@ -397,7 +397,7 @@ export default function AiCopilotPanel({
         )}
 
         {error && (
-          <div className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/25 rounded-lg px-3 py-2">
+          <div className="text-xs text-rose-800 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
             {error}
           </div>
         )}
@@ -415,15 +415,15 @@ export default function AiCopilotPanel({
             onChange={(e) => setQuestion(e.target.value)}
             placeholder={
               language === "bn"
-                ? "এই রিপোর্ট সম্পর্কে প্রশ্ন করুন..."
-                : "Ask about NDVI trend, rainfall, or field priorities..."
+                ? "এই বন প্রতিবেদন সম্পর্কে প্রশ্ন করুন..."
+                : "Ask about canopy NDVI, rainfall, or deforestation risk..."
             }
-            className="flex-1 bg-[#0a0e0c] border border-white/[0.12] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/60"
+            className="flex-1 bg-[#f7fbf8] border border-emerald-950/15 rounded-xl px-3.5 py-2.5 text-sm text-[#0b2419] placeholder:text-[#7c9688] focus:outline-none focus:bg-white focus:border-[#0f5c3e]"
           />
           <button
             type="submit"
             disabled={chatLoading || !question.trim()}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-500 text-zinc-950 font-medium text-sm hover:bg-emerald-400 transition-colors active:scale-[0.98] disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0f5c3e] text-white font-semibold text-sm hover:bg-[#0b4730] transition-colors active:scale-[0.98] disabled:opacity-40"
           >
             <PaperPlaneRight size={16} weight="bold" />
             <span>{chatLoading ? "Thinking..." : "Ask"}</span>

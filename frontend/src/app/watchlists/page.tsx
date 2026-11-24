@@ -7,6 +7,7 @@ import {
   BookmarkSimple,
   Plus,
   Trash,
+  TreeEvergreen,
 } from "@phosphor-icons/react";
 import AppShell from "@/components/AppShell";
 import { api } from "@/lib/api";
@@ -73,20 +74,23 @@ export default function WatchlistsPage() {
 
   return (
     <AppShell
-      title="Forest Watchlists"
-      subtitle="Save critical Bangladesh reserves and districts for rapid recurring satellite checks."
+      title="Protected Forest Watchlists"
+      subtitle="Save critical Bangladesh reserves, mangroves, and hill districts for recurring deforestation scans."
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Saved List */}
-        <section className="lg:col-span-7 rounded-2xl border border-white/[0.08] bg-[#111714] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/[0.08]">
-            <h2 className="text-sm font-semibold text-white">
-              Active Monitored Zones ({items.length})
+        <section className="lg:col-span-7 rounded-2xl forest-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-emerald-950/10 bg-[#fafdfb] flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[#0b2419]">
+              Active Monitored Forest Zones ({items.length})
             </h2>
+            <span className="text-[11px] font-mono text-[#5c7a6b]">
+              ONE-CLICK RESCAN
+            </span>
           </div>
 
           {error && (
-            <div className="m-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-200">
+            <div className="m-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-800">
               {error}
             </div>
           )}
@@ -94,31 +98,31 @@ export default function WatchlistsPage() {
           {loading ? (
             <div className="p-6 space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-14 rounded-xl bg-white/[0.04] animate-pulse" />
+                <div key={i} className="h-14 rounded-xl bg-[#edf5ef] animate-pulse" />
               ))}
             </div>
           ) : items.length === 0 ? (
             <div className="p-10 text-center space-y-2">
-              <BookmarkSimple size={28} className="mx-auto text-zinc-600" />
-              <div className="text-sm font-medium text-zinc-300">
-                Your watchlist is empty
+              <BookmarkSimple size={28} className="mx-auto text-emerald-700/45" />
+              <div className="text-sm font-semibold text-[#0b2419]">
+                Your forest watchlist is empty
               </div>
-              <p className="text-xs text-zinc-500">
-                Add one of the Bangladesh reserve presets or enter a custom location on the right.
+              <p className="text-xs text-[#557464]">
+                Add one of the Bangladesh reserve presets or enter a custom forest region on the right.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-white/[0.06]">
+            <div className="divide-y divide-emerald-950/8">
               {items.map((wl) => (
                 <div
                   key={wl.id}
-                  className="px-5 py-4 flex flex-wrap items-center justify-between gap-3"
+                  className="px-5 py-4 flex flex-wrap items-center justify-between gap-3 hover:bg-[#f5faf6] transition-colors"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-zinc-100">
+                    <div className="text-sm font-semibold text-[#0b2419]">
                       {wl.name}
                     </div>
-                    <div className="text-[11px] font-mono text-zinc-500 mt-0.5">
+                    <div className="text-[11px] font-mono text-[#5c7a6b] mt-0.5">
                       Target {wl.target_coverage}% · Last Risk:{" "}
                       {wl.last_risk || "Not scanned"} · NDVI{" "}
                       {wl.last_ndvi?.toFixed(3) ?? "N/A"}
@@ -127,7 +131,7 @@ export default function WatchlistsPage() {
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/explorer?location=${encodeURIComponent(wl.name)}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium hover:bg-emerald-500/25"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#edf5ef] border border-emerald-200 text-[#0f5c3e] text-xs font-semibold hover:bg-[#0f5c3e] hover:text-white transition-colors"
                     >
                       <span>Scan</span>
                       <ArrowRight size={13} />
@@ -136,7 +140,7 @@ export default function WatchlistsPage() {
                       type="button"
                       onClick={() => removeItem(wl.id)}
                       aria-label="Delete watchlist item"
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-[#5c7a6b] hover:text-rose-700 hover:bg-rose-50 transition-colors"
                     >
                       <Trash size={15} />
                     </button>
@@ -155,25 +159,27 @@ export default function WatchlistsPage() {
               if (!name.trim()) return;
               addRegion({ name: name.trim(), target_coverage: target });
             }}
-            className="rounded-2xl border border-white/[0.08] bg-[#111714] p-5 space-y-4"
+            className="rounded-2xl forest-card p-5 space-y-4"
           >
-            <h3 className="text-sm font-semibold text-white">
-              Add Custom Region
+            <h3 className="text-sm font-semibold text-[#0b2419]">
+              Add Custom Forest Region
             </h3>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-zinc-400">Location Name</label>
+              <label className="text-xs font-semibold text-[#1e3d2f]">
+                Location Name
+              </label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Bandarban, Bangladesh"
-                className="rounded-xl bg-[#0a0e0c] border border-white/[0.12] px-3.5 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/60"
+                className="rounded-xl bg-[#f7fbf8] border border-emerald-950/15 px-3.5 py-2.5 text-sm text-[#0b2419] placeholder:text-[#7c9688] focus:outline-none focus:bg-white focus:border-[#0f5c3e]"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-zinc-400">
-                Green Coverage Target (%)
+              <label className="text-xs font-semibold text-[#1e3d2f]">
+                Canopy Coverage Target (%)
               </label>
               <input
                 type="number"
@@ -181,34 +187,37 @@ export default function WatchlistsPage() {
                 max={95}
                 value={target}
                 onChange={(e) => setTarget(Number(e.target.value))}
-                className="rounded-xl bg-[#0a0e0c] border border-white/[0.12] px-3.5 py-2 text-sm font-mono text-white focus:outline-none focus:border-emerald-500/60"
+                className="rounded-xl bg-[#f7fbf8] border border-emerald-950/15 px-3.5 py-2.5 text-sm font-mono text-[#0b2419] focus:outline-none focus:bg-white focus:border-[#0f5c3e]"
               />
             </div>
             <button
               type="submit"
               disabled={submitting}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm py-2.5 transition-colors active:scale-[0.98] disabled:opacity-50"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0f5c3e] hover:bg-[#0b4730] text-white font-semibold text-sm py-2.5 shadow-sm transition-colors active:scale-[0.98] disabled:opacity-50"
             >
               <Plus size={15} weight="bold" />
               <span>{submitting ? "Saving..." : "Add to Watchlist"}</span>
             </button>
           </form>
 
-          <section className="rounded-2xl border border-white/[0.08] bg-[#111714] p-5 space-y-3">
-            <h3 className="text-sm font-semibold text-white">
-              Priority Bangladesh Forest Presets
-            </h3>
+          <section className="rounded-2xl forest-card p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <TreeEvergreen size={16} weight="duotone" className="text-[#0f5c3e]" />
+              <h3 className="text-sm font-semibold text-[#0b2419]">
+                Priority Bangladesh Forest Presets
+              </h3>
+            </div>
             <div className="space-y-2">
               {BANGLADESH_PRESETS.map((preset) => (
                 <div
                   key={preset.name}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-[#0d120f] px-3.5 py-2.5"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-emerald-950/10 bg-[#f7fbf8] px-3.5 py-2.5"
                 >
                   <div className="min-w-0">
-                    <div className="text-xs font-medium text-zinc-200 truncate">
+                    <div className="text-xs font-semibold text-[#0b2419] truncate">
                       {preset.name}
                     </div>
-                    <div className="text-[10px] font-mono text-zinc-500">
+                    <div className="text-[10px] font-mono text-[#5c7a6b]">
                       {preset.lat.toFixed(3)}, {preset.lon.toFixed(3)} · Target{" "}
                       {preset.target}%
                     </div>
@@ -224,7 +233,7 @@ export default function WatchlistsPage() {
                         target_coverage: preset.target,
                       })
                     }
-                    className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-emerald-500/20 hover:text-emerald-300 text-xs text-zinc-300 transition-colors"
+                    className="px-3 py-1 rounded-lg bg-white border border-emerald-950/12 hover:bg-[#0f5c3e] hover:text-white hover:border-[#0f5c3e] text-xs font-semibold text-[#0f5c3e] transition-colors"
                   >
                     Add
                   </button>

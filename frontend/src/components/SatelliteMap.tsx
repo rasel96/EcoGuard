@@ -30,7 +30,7 @@ interface SatelliteMapProps {
 }
 
 type OverlayMode = "none" | "ndvi" | "landcover" | "hansen";
-type BaseMapMode = "satellite" | "dark";
+type BaseMapMode = "satellite" | "light";
 
 function escapeHtml(raw: string): string {
   return raw
@@ -106,7 +106,7 @@ export default function SatelliteMap({
     const url =
       baseMap === "satellite"
         ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
     const attribution =
       baseMap === "satellite"
@@ -158,9 +158,9 @@ export default function SatelliteMap({
       );
       const poly = L.polygon(latLngs, {
         color: "#10b981",
-        weight: 2,
+        weight: 2.5,
         fillColor: "#10b981",
-        fillOpacity: 0.14,
+        fillOpacity: 0.16,
       }).addTo(layer);
       map.fitBounds(poly.getBounds(), { padding: [36, 36] });
     } else if (boundingBox && boundingBox.length === 4) {
@@ -171,10 +171,10 @@ export default function SatelliteMap({
       ];
       L.rectangle(bounds, {
         color: "#10b981",
-        weight: 2,
+        weight: 2.2,
         dashArray: "6 4",
         fillColor: "#10b981",
-        fillOpacity: 0.08,
+        fillOpacity: 0.1,
       }).addTo(layer);
       map.fitBounds(bounds, { padding: [36, 36] });
     }
@@ -244,7 +244,7 @@ export default function SatelliteMap({
     draftPoints.forEach((pt, idx) => {
       L.circleMarker(pt, {
         radius: 5,
-        color: "#10b981",
+        color: "#0f5c3e",
         fillColor: idx === 0 ? "#f59e0b" : "#34d399",
         fillOpacity: 1,
         weight: 2,
@@ -254,7 +254,7 @@ export default function SatelliteMap({
     if (draftPoints.length >= 2) {
       L.polyline(draftPoints, {
         color: "#34d399",
-        weight: 2,
+        weight: 2.5,
         dashArray: "4 4",
       }).addTo(layer);
     }
@@ -264,7 +264,7 @@ export default function SatelliteMap({
         color: "#34d399",
         weight: 1.5,
         fillColor: "#10b981",
-        fillOpacity: 0.18,
+        fillOpacity: 0.2,
       }).addTo(layer);
     }
   }, [draftPoints]);
@@ -293,9 +293,9 @@ export default function SatelliteMap({
   const hasAnyTile = Boolean(ndviTileUrl || landcoverTileUrl || hansenTileUrl);
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-white/[0.1] bg-[#0d1411]">
+    <div className="relative rounded-2xl overflow-hidden forest-card">
       {/* Map Controls Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 border-b border-white/[0.08] bg-[#111714]">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 border-b border-emerald-950/10 bg-white">
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
@@ -303,10 +303,10 @@ export default function SatelliteMap({
               setDrawing((v) => !v);
               setDraftPoints([]);
             }}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors active:scale-[0.98] ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors active:scale-[0.98] ${
               drawing
-                ? "bg-emerald-500 text-zinc-950"
-                : "bg-white/[0.05] text-zinc-200 hover:bg-white/[0.1]"
+                ? "bg-[#0f5c3e] text-white shadow-sm"
+                : "bg-[#edf5ef] text-[#0f5c3e] hover:bg-emerald-100"
             }`}
           >
             <PolygonIcon size={15} />
@@ -317,9 +317,9 @@ export default function SatelliteMap({
             <button
               type="button"
               onClick={finishPolygon}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
             >
-              <Check size={14} />
+              <Check size={14} weight="bold" />
               <span>Apply ({draftPoints.length} pts)</span>
             </button>
           )}
@@ -328,7 +328,7 @@ export default function SatelliteMap({
             <button
               type="button"
               onClick={clearPolygon}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 bg-white/[0.04] hover:bg-white/[0.08]"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#466355] hover:text-rose-700 bg-[#f5faf6] hover:bg-rose-50"
             >
               <Eraser size={14} />
               <span>Clear AOI</span>
@@ -337,29 +337,29 @@ export default function SatelliteMap({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="inline-flex rounded-lg border border-white/[0.08] bg-[#0a0e0c] p-0.5 text-[11px]">
+          <div className="inline-flex rounded-lg border border-emerald-950/12 bg-[#f5faf6] p-0.5 text-[11px] font-medium">
             <button
               type="button"
               onClick={() => setBaseMap("satellite")}
-              className={`px-2 py-1 rounded-md flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
                 baseMap === "satellite"
-                  ? "bg-white/10 text-white"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-white text-[#0f5c3e] shadow-xs font-semibold"
+                  : "text-[#557464] hover:text-[#0b2419]"
               }`}
             >
               <GlobeHemisphereEast size={13} />
-              <span>Imagery</span>
+              <span>Satellite</span>
             </button>
             <button
               type="button"
-              onClick={() => setBaseMap("dark")}
-              className={`px-2 py-1 rounded-md ${
-                baseMap === "dark"
-                  ? "bg-white/10 text-white"
-                  : "text-zinc-400 hover:text-zinc-200"
+              onClick={() => setBaseMap("light")}
+              className={`px-2.5 py-1 rounded-md transition-colors ${
+                baseMap === "light"
+                  ? "bg-white text-[#0f5c3e] shadow-xs font-semibold"
+                  : "text-[#557464] hover:text-[#0b2419]"
               }`}
             >
-              Dark Base
+              Light Map
             </button>
           </div>
         </div>
@@ -373,19 +373,23 @@ export default function SatelliteMap({
       >
         <div ref={containerRef} className="w-full h-full" />
         {drawing && (
-          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[1000] rounded-full border border-emerald-400/40 bg-[#0a0e0c]/90 px-3.5 py-1.5 text-[11px] font-mono text-emerald-200 shadow-lg">
-            Click {Math.max(0, 3 - draftPoints.length) > 0
-              ? `at least ${3 - draftPoints.length} more point${3 - draftPoints.length === 1 ? "" : "s"}`
-              : "more points or Apply"} to define AOI ({draftPoints.length} placed)
+          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[1000] rounded-full border border-emerald-300 bg-[#082419]/92 px-4 py-1.5 text-[11px] font-mono text-emerald-100 shadow-lg">
+            Click{" "}
+            {Math.max(0, 3 - draftPoints.length) > 0
+              ? `at least ${3 - draftPoints.length} more point${
+                  3 - draftPoints.length === 1 ? "" : "s"
+                }`
+              : "more points or Apply"}{" "}
+            to define forest AOI ({draftPoints.length} placed)
           </div>
         )}
       </div>
 
       {/* Satellite Overlay Switcher Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 border-t border-white/[0.08] bg-[#111714] text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 border-t border-emerald-950/10 bg-[#fafdfb] text-xs">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="inline-flex items-center gap-1 text-zinc-400 mr-1 font-mono text-[11px]">
-            <Stack size={14} />
+          <span className="inline-flex items-center gap-1 text-[#557464] mr-1 font-mono text-[11px] font-semibold">
+            <Stack size={14} className="text-[#0f5c3e]" />
             GEE LAYER:
           </span>
           {(
@@ -403,10 +407,10 @@ export default function SatelliteMap({
               onClick={() => setOverlayMode(layer.id)}
               className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
                 overlayMode === layer.id && layer.available
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/35"
+                  ? "bg-[#0f5c3e] text-white"
                   : layer.available
-                  ? "bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]"
-                  : "bg-white/[0.02] text-zinc-600 cursor-not-allowed"
+                  ? "bg-white border border-emerald-950/12 text-[#234234] hover:bg-[#edf5ef]"
+                  : "bg-[#f2f6f3] text-[#9ab0a4] cursor-not-allowed"
               }`}
             >
               {layer.label}
@@ -415,7 +419,7 @@ export default function SatelliteMap({
         </div>
 
         {hasAnyTile && overlayMode !== "none" && (
-          <label className="flex items-center gap-2 text-[11px] font-mono text-zinc-400">
+          <label className="flex items-center gap-2 text-[11px] font-mono text-[#557464]">
             <span>OPACITY</span>
             <input
               type="range"
@@ -424,9 +428,9 @@ export default function SatelliteMap({
               step={0.05}
               value={opacity}
               onChange={(e) => setOpacity(Number(e.target.value))}
-              className="w-20 accent-emerald-500"
+              className="w-20 accent-[#0f5c3e]"
             />
-            <span className="tabular-nums w-8 text-right">
+            <span className="tabular-nums w-8 text-right font-semibold text-[#0b2419]">
               {Math.round(opacity * 100)}%
             </span>
           </label>
